@@ -1,0 +1,82 @@
+from . import db
+from werkzeug.security import generate_password_hash
+
+class Users(db.Model):
+    __tablename__ = 'Users'
+ 
+    id = db.Column(db.Integer, primary_key=True)
+    first_name = db.Column(db.String(1024))
+    last_name = db.Column(db.String(1024))
+    username = db.Column(db.String(255))
+    email = db.Column(db.String(255), unique=True)
+    password = db.Column(db.String(255))
+    profile_photo = db.Column(db.String(255))
+    role = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime(timezone=True))
+    
+
+    def __init__(self, first_name, last_name, username, password, email, role, profile_photo, created_at):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.username = username
+        self.password = generate_password_hash(password, method='pbkdf2:sha256')
+        self.email = email
+        self.profile_photo = profile_photo
+        self.created_at = created_at
+        self.role = role
+
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        try:
+            return unicode(self.id)  # python 2 support
+        except NameError:
+            return str(self.id)  # python 3 support
+
+    def __repr__(self):
+        return '<User %r, %r>' % (self.id, self.name) 
+
+class Events(db.Model):
+    # You can use this to change the table name. The default convention is to use
+    # the class name. In this case a class name of UserProfile would create a
+    # user_profile (singular) table, but if we specify __tablename__ we can change it
+    # to `user_profiles` (plural) or some other name.
+    __tablename__ = 'Events'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(1024))
+    start_date = db.Column(db.DateTime(timezone=True))
+    end_date = db.Column(db.DateTime(timezone=True))
+    description = db.Column(db.String(1024))
+    venue = db.Column(db.String(255))
+    image = db.Column(db.String(255))
+    website_url = db.Column(db.String(255))
+    status = db.Column(db.String(255))
+    uid = db.Column(db.Integer, foreign_key = True)
+    created_at = db.Column(db.DateTime(timezone=True))
+
+
+
+    def __init__(self, title, start_date, end_date, description, venue, image, website_url, status, uid, created_at):
+        self.description = description
+        self.title = title
+        self.start_date = start_date
+        self.end_date = end_date
+        self.venue = venue
+        self.image = image
+        self.website_url = website_url
+        self.status = status
+        self.uid = uid 
+        self.created_at = created_at
+
+
+    def __repr__(self):
+        return '<Events %r>' % (self.id)
+

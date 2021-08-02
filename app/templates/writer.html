@@ -1,0 +1,38 @@
+<section id="register-form" class="container-fluid">
+    <h3 class="font-weight-bold display-3">
+      Register New User
+    </h3>
+    <form action="/api/register" method="POST" enctype="multipart/form-data">
+        <div class="form-row">
+            <div class="col w-25">
+                <label for="username">Username</label>
+                <input id="username" type="text" name="username">
+            </div>
+            <div class="col w-25">
+                <label for="password">Password</label>
+                <input id="password" type="password" name="password">
+            </div> 
+        </div>
+        <div class="form-row">
+            <div class="col w-15">
+                <label for="first_name">First Name</label>
+                <input id="first_name" name="first_name" type="text">
+            </div>
+            <div class="col w-15">
+                <label for="last_name">Last Name</label>
+                <input id="last_name" name="last_name" type="text">
+            </div>
+            <div class="col w-25">
+                <label for="email">Email</label>
+                <input type="email" name="email" id="email">
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="col w-50">
+                <label for="photo">Upload Photo</label>
+                <input type="file" name="photo" id="photo">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success">Register</button>
+    </form>
+</section>
