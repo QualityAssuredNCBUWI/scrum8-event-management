@@ -1,4 +1,3 @@
-```
 # uWI NVB AGILE LABS 2021 - SCRUM CYCLE 8 
 
  - The following commands are expected to be run in the root directory, scrum8-event-management
