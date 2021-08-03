@@ -55,6 +55,46 @@ paths:
           description: "Created"
       security:
       - JWT_Token: []
+      
+  /event/group/{groupId}/users/{email}:
+    post:
+      tags: 
+      - "event"
+      summary: "Add User to group"
+      description: "Adds a specified user to an existing group"
+      operationId: "addUserToGroup"
+      produces: 
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "groupId"
+        in: "path"
+        description: "ID of group the admin is in"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "email"
+        in: "path"
+        description: "Email of the user to be added to the event organizing group"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Member successfully added to group"
+          schema:
+            $ref: "#/definitions/Affiliation"
+        "400":
+          description: "User ID supplied may be incorrect"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "404":
+          description: "User not found"
+          schema:
+            $ref: "#/definitions/ApiResponse" 
+      security:
+      - api_key: []
+      
+  
         
   
         
@@ -659,6 +699,16 @@ definitions:
         format: "date"
     xml:
       name: "User"
+  Affiliation:
+    type: "object"
+    properties:
+      userId: 
+        type: "integer"
+        format: "integer"
+      groupId: 
+        type: "integer"
+        format: "integer"
+    
   ApiResponse:
     type: "object"
     properties:
