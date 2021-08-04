@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 71c23a6dfd0c
+Revision ID: 3c04b9b71a7d
 Revises: 
-Create Date: 2021-08-04 12:33:01.542447
+Create Date: 2021-08-04 13:35:52.027504
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '71c23a6dfd0c'
+revision = '3c04b9b71a7d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -22,11 +22,9 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('first_name', sa.String(length=1024), nullable=True),
     sa.Column('last_name', sa.String(length=1024), nullable=True),
-    sa.Column('username', sa.String(length=255), nullable=True),
     sa.Column('email', sa.String(length=255), nullable=True),
     sa.Column('password', sa.String(length=255), nullable=True),
     sa.Column('profile_photo', sa.String(length=255), nullable=True),
-    sa.Column('role', sa.String(length=255), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
@@ -54,22 +52,22 @@ def upgrade():
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('Affiliate',
-    sa.Column('userId', sa.String(length=1024), nullable=False),
-    sa.Column('groupId', sa.String(length=1024), nullable=False),
+    sa.Column('userId', sa.Integer(), nullable=False),
+    sa.Column('groupId', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['groupId'], ['Group.id'], ),
     sa.ForeignKeyConstraint(['userId'], ['User.id'], ),
     sa.PrimaryKeyConstraint('userId', 'groupId')
     )
     op.create_table('Schedule',
-    sa.Column('eventId', sa.String(length=1024), nullable=False),
-    sa.Column('groupId', sa.String(length=1024), nullable=False),
+    sa.Column('eventId', sa.Integer(), nullable=False),
+    sa.Column('groupId', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['eventId'], ['Event.id'], ),
     sa.ForeignKeyConstraint(['groupId'], ['Group.id'], ),
     sa.PrimaryKeyConstraint('eventId', 'groupId')
     )
     op.create_table('Submit',
-    sa.Column('eventId', sa.String(length=1024), nullable=False),
-    sa.Column('userId', sa.String(length=1024), nullable=False),
+    sa.Column('eventId', sa.Integer(), nullable=False),
+    sa.Column('userId', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['eventId'], ['Event.id'], ),
     sa.ForeignKeyConstraint(['userId'], ['User.id'], ),
     sa.PrimaryKeyConstraint('eventId', 'userId')
