@@ -103,8 +103,8 @@ class Group(db.Model):
 class Affiliate(db.Model):
     __tablename__ = 'Affiliate'
 
-    userId = db.Column(db.String(1024), db.ForeignKey('user.id'), nullable=False)
-    groupId = db.Column(db.String(1024), db.ForeignKey('group.id'), nullable=False)
+    userId = db.Column(db.String(1024), db.ForeignKey('user.id'), nullable=False, primary_key=True)
+    groupId = db.Column(db.String(1024), db.ForeignKey('group.id'), nullable=False, primary_key=True)
     
     def __init__(self, userId, groupId):
         self.userId = userId
@@ -118,8 +118,8 @@ class Affiliate(db.Model):
 class Schedule(db.Model):
     __tablename__ = 'Schedule'
 
-    eventId = db.Column(db.String(1024),  db.ForeignKey('event.id'), nullable=False)
-    groupId = db.Column(db.String(1024), db.ForeignKey('group.id'), nullable=False)
+    eventId = db.Column(db.String(1024),  db.ForeignKey('event.id'), nullable=False, primary_key=True)
+    groupId = db.Column(db.String(1024), db.ForeignKey('group.id'), nullable=False, primary_key=True)
     
     def __init__(self, eventId, groupId):
         self.eventId = eventId
@@ -133,8 +133,8 @@ class Schedule(db.Model):
 class Submit(db.Model):
     __tablename__ = 'Submit'
 
-    eventId = db.Column(db.String(1024), db.ForeignKey('event.id'),  nullable=False)
-    userId = db.Column(db.String(1024), db.ForeignKey('user.id'),  nullable=False)
+    eventId = db.Column(db.String(1024), db.ForeignKey('event.id'),  nullable=False, primary_key=True)
+    userId = db.Column(db.String(1024), db.ForeignKey('user.id'),  nullable=False, primary_key=True)
     
     def __init__(self, eventId, userId):
         self.eventId = eventId
