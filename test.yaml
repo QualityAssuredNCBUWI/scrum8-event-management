@@ -1,0 +1,513 @@
+swagger: "2.0"
+info:
+  description: "This YAML doc depicts the various endpoints to a RESTapi for a Event management system"
+  version: "1.0.0"
+  title: "Event Management System"
+  termsOfService: "http://swagger.io/terms/"
+  contact:
+    email: "apiteam@swagger.io"
+  license:
+    name: "Apache 2.0"
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
+host: "duroad.swagger.io"
+basePath: "/v2"
+tags:
+- name: "events"
+  description: "Operations about events"
+  externalDocs:
+    description: "Find out more"
+    url: "http://swagger.io"
+- name: "users"
+  description: "Operations about user"
+  externalDocs:
+    description: "Find out more about our store"
+    url: "http://swagger.io"
+schemes:
+- "https"
+- "http"
+paths:
+  /events:
+    post:
+      tags:
+      - "events"
+      summary: "Add a new event"
+      description: ""
+      operationId: "addEvent"
+      consumes:
+      - "application/json"
+      - "application/xml"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Parameters needed for the creation of a new Event object"
+        required: true
+        schema:
+          $ref: "#/definitions/Events"
+      responses:
+        "405":
+          description: "Invalid input"
+        "201":
+          description: "Created"
+      security:
+      - JWT_Token: []
+      
+      
+      
+  /api/groups/{groupId},{email}:
+    post:
+      tags: 
+      - "events"
+      summary: "Add User to group"
+      description: "Adds a specified user to an existing group"
+      operationId: "addUserToGroup"
+      produces: 
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "groupId"
+        in: "path"
+        description: "ID of group the admin is in"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "email"
+        in: "path"
+        description: "Email of the user to be added to the event organizing group"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "Member successfully added to group"
+          schema:
+            $ref: "#/definitions/Affiliation"
+        "400":
+          description: "User ID supplied may be incorrect"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "404":
+          description: "User not found"
+          schema:
+            $ref: "#/definitions/ApiResponse" 
+      security:
+      - api_key: []
+      
+  /api/groups:
+    post: 
+      tags: 
+      - "events"
+      summary: "Create a group"
+      description: "Creates a group for an event if the group doesnt exist"
+      operationId: "createGroup"
+      produces: 
+      - "application/xml"
+      - "application/json"
+      parameters: 
+      - in: "body"
+        name: "body"
+        description: "Created group object"
+        required: true
+        schema:
+          $ref: "#/definitions/Groups"
+      responses:
+        "201":
+          description: "Group Successfully created"
+          schema:
+            $ref: "#/definitions/Groups"
+        "400":
+          description: "Invalid userId supplied"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "404":
+          description: "Not found"
+          schema:
+            $ref: "#/definitions/ApiResponse" 
+      security:
+      - api_key: []
+      
+  /api/events/:
+    get:
+      tags:
+      - "events"
+      summary: "Get the first 10 events"
+      description: "Get the first 10 events and filter by either date or title if present in query."
+      operationId: "getevents"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "query"
+        name: "start"
+        type: "string"
+        required: false
+        description: "The start of the date range of the events to filter"
+      - in: "query"
+        name: "end"
+        type: "string"
+        description: "The end of the date ranges of the events to filter"
+      - in: "query"
+        name: "title"
+        type: "string"
+        description: "The title of the event being filtered"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            xml:
+             name: "Events"
+            items:
+              $ref: "#/definitions/Events"
+            minItems: 2
+        "400":
+          description: "Invalid ID supplied"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "404":
+          description: "No events Found"
+          schema:
+            $ref: "#/definitions/ApiResponse" 
+      security:
+      - api_key: []
+        
+  /api/events/{eventId}:
+    get:
+      tags:
+      - "events"
+      summary: "Find event by ID"
+      description: "Returns a single event"
+      operationId: "geteventById"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "eventId"
+        in: "path"
+        description: "ID of event to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Events"
+        "400":
+          description: "Invalid ID supplied"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "404":
+          description: "Event not found"
+          schema:
+            $ref: "#/definitions/ApiResponse" 
+      security:
+      - api_key: []
+    put:
+      tags:
+      - "events"
+      summary: "Edit event by ID"
+      description: "make and edit to a single Event based on ID number"
+      parameters:
+      - name: "eventId"
+        in: "path"
+        required: true
+        type: "integer"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Events"
+        "400":
+          description: "Invalid ID supplied"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "404":
+          description: "Event not found"
+          schema:
+            $ref: "#/definitions/ApiResponse" 
+      security:
+        - JWT_Token: []
+    delete:
+      tags:
+      - "events"
+      summary: "Delete event"
+      description: "Delete event by Id"
+      operationId: "removeEvent"
+      parameters:
+      - name: "eventId"
+        in: "path"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Events"
+        "400":
+          description: "Invalid ID supplied"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "404":
+          description: "Event not found"
+          schema:
+            $ref: "#/definitions/ApiResponse" 
+      security:
+        - JWT_Token: []
+        
+  /api/register:
+    post:
+      tags:
+      - "users"
+      summary: "Create user"
+      description: "This can only be done by the logged in user."
+      operationId: "createUser"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Created user object"
+        required: true
+        schema:
+          $ref: "#/definitions/UserRegistration"
+      responses:
+        "201":
+          description: "Account created"
+          schema:
+            $ref: "#/definitions/Users"
+            
+  /api/auth/login:
+    post:
+      tags:
+      - "users"
+      summary: "Logs user into the system"
+      description: ""
+      operationId: "loginUser"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "username"
+        in: "query"
+        description: "The user name for login"
+        required: true
+        type: "string"
+      - name: "password"
+        in: "query"
+        description: "The password for login in clear text"
+        required: true
+        type: "string"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: '#/securityDefinitions/JWT_Token'
+        "401":
+          description: "Access Token missing or invalid"
+          
+  /api/auth/logout:
+    post:
+      tags:
+      - "users"
+      summary: "Logs out current logged in user session"
+      description: ""
+      operationId: "logoutUser"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters: []
+      responses:
+        default:
+          description: "successful operation"
+
+  /api/users/{user_id}:
+    get:
+      tags:
+      - "users"
+      summary: "Get user by user ID"
+      description: ""
+      operationId: "getUserById"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "user_id"
+        in: "path"
+        description: "The user ID that needs to be fetched"
+        required: true
+        type: "integer"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Users"
+        "400":
+          description: "Invalid username supplied"
+        "404":
+          description: "User not found"
+    put:
+      tags:
+      - "users"
+      summary: "Updated user"
+      description: "This can only be done by the logged in user."
+      operationId: "updateUser"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "user_id"
+        in: "path"
+        description: "name that need to be updated"
+        required: true
+        type: "string"
+      - in: "body"
+        name: "body"
+        description: "Updated user object"
+        required: true
+        schema:
+          $ref: "#/definitions/Users"
+      responses:
+        "400":
+          description: "Invalid user supplied"
+        "404":
+          description: "User not found"
+    
+    
+    
+securityDefinitions:
+  JWT_Token:
+    type: apiKey
+    in: "header"
+    name: "JWT_token"
+    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+  api_key:
+    type: "apiKey"
+    name: "api_key"
+    in: "header"
+definitions:
+  Events:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      title:
+        type: "string"
+        example: "The Party"
+      created_at:
+        type: "string"
+        format: "date"
+      start_date:
+        type: "string"
+        format: "date"
+      end_date:
+        type: "string"
+        format: "date"
+      description:
+        type: "string"
+        example: "The hottest party of the year, since Covid-19"
+      venue:
+        type: "string"
+        example: "21 Kingston Road, Bog Walk, St. Catherine, Jamaica"
+      image|flyer:
+        type: "string"
+        format: "url"
+        example: "flyer.jpg"
+      website_url: 
+        type: "string"
+        format: "URL"
+        example: "https://theparty.com"
+      status:
+        type: "string"
+        description: "The status of event"
+        enum: [pending, published]
+      uid:
+        type: "integer"
+        format: "int64"
+        description: "user id of user who created the event"
+    xml:
+      name: "Order"
+  Users:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      first_name:
+        type: "string"
+      last_name:
+        type: "string"
+      email:
+        type: "string"
+        format: "email"
+      profile_photo:
+        type: "string"
+        format: "url"
+      created_at:
+        type: "string"
+        format: "date"
+    xml:
+      name: "Users"
+      
+  Affiliation:
+    type: "object"
+    properties:
+      userId: 
+        type: "integer"
+        format: "integer"
+      groupId: 
+        type: "integer"
+        format: "integer"
+  Groups:
+    type: "object"
+    properties:
+      id: 
+        type: "integer"
+        format: "integer"
+      name: 
+        type: "string"
+        format: "string"
+      admin: 
+        type: "integer"
+        format: "integer"
+
+  UserRegistration:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      first_name:
+        type: "string"
+      last_name:
+        type: "string"
+      email:
+        type: "string"
+        format: "email"
+      password:
+        type: "string"
+        format: "password"
+      profile_photo:
+        type: "string"
+        format: "url"
+      created_at:
+        type: "string"
+        format: "date"
+    xml:
+      name: "Users"
+      
+  ApiResponse:
+    type: "object"
+    properties:
+      code:
+        type: "integer"
+        format: "int32"
+      message:
+        type: "string"
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"

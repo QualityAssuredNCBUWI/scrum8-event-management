@@ -8,6 +8,7 @@ import os
 from app import app, db, login_manager
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort, jsonify, g, make_response
 from flask_login import login_user, logout_user, current_user, login_required
+from app.models import User, Event
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 #from datetime import datetime, timezone
@@ -92,7 +93,7 @@ def register():
                  return jsonify({'message': 'Username or email already exists.'}), 409
         else:
             # create user 
-            user = User (
+            user = User(
                 first_name=request.form['firstname'],
                 last_name=request.form['lastname'],
                 username = request.form['username'],
@@ -222,13 +223,13 @@ def getUser(user_id):
 
 @app.route('/api/events', methods = ['GET'])
 @requires_auth
-def getAllEvents():
+def getAllEvent():
     if request.method == 'GET':
-        events = db.session.query(Event).all()
-        print(events)
+        event = db.session.query(Event).all()
+        print(event)
         result = []
-        if len(events) != 0:
-            for e in events:
+        if len(event) != 0:
+            for e in event:
                 id = e.id
                 title = e.title
                 description = e.description
@@ -242,8 +243,8 @@ def getAllEvents():
                 cresult = {'id': id, "description": description, "title": title, "start_date": start_date, "end_date": end_date, "venue": venue, "website_url": website_url, "status": status, "image": image, "uid": uid}
                 result.append(cresult)
             return jsonify({'result': result}), 200
-        elif len(events) == 0: 
-            return jsonify({"result": events}), 404
+        elif len(event) == 0: 
+            return jsonify({"result": event}), 404
 
 @app.route('/api/events', methods = ['POST'])
 @requires_auth
@@ -259,7 +260,7 @@ def addEvents():
         eventPhotoPath = "../../../eventUploads/" + eventFilename
 
         # check if event already exists in database 
-        # for a user to add a event, it must have at least one attribute that differs from all other Event
+        # for a user to add a event, it must have at least one attribute that differs from all other events
         if Event.query.filter_by(description = request.form['description']).first() \
             and Event.query.filter_by(start_date = request.form['start_date']).first() \
             and Event.query.filter_by(end_date = request.form['end_date']).first() \

@@ -3,8 +3,6 @@ from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
 from .config import Config
-import os
-import mysql.connector as mysql
 
 app = Flask(__name__)
 db = SQLAlchemy(app)

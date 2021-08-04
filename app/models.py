@@ -57,7 +57,7 @@ class Event(db.Model):
     image = db.Column(db.String(255))
     website_url = db.Column(db.String(255))
     status = db.Column(db.String(255))
-    uid = db.Column(db.Integer, db.ForeignKey('user.id'))
+    uid = db.Column(db.Integer, db.ForeignKey('User.id'))
     created_at = db.Column(db.DateTime(timezone=True))
 
 
@@ -84,7 +84,7 @@ class Group(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(1024))
-    admin = db.Column(db.Integer, db.ForeignKey('user.id'),  nullable=False)
+    admin = db.Column(db.Integer, db.ForeignKey('User.id'),  nullable=False)
     
     def __init__(self, name, admin):
         self.name = name
