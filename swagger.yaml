@@ -131,9 +131,50 @@ paths:
       security:
       - api_key: []
       
-      
-        
-  
+  /api/events/:
+    get:
+      tags:
+      - "events"
+      summary: "Get the first 10 events"
+      description: "Get the first 10 events and filter by either date or title if present in query."
+      operationId: "getevents"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - in: "query"
+        name: "start"
+        type: "string"
+        required: false
+        description: "The start of the date range of the events to filter"
+      - in: "query"
+        name: "end"
+        type: "string"
+        description: "The end of the date ranges of the events to filter"
+      - in: "query"
+        name: "title"
+        type: "string"
+        description: "The title of the event being filtered"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            type: "array"
+            xml:
+             name: "Events"
+            items:
+              $ref: "#/definitions/Events"
+            minItems: 2
+        "400":
+          description: "Invalid ID supplied"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+        "404":
+          description: "No events Found"
+          schema:
+            $ref: "#/definitions/ApiResponse" 
+      security:
+      - api_key: []
         
   /api/events/{eventId}:
     get:
@@ -683,6 +724,7 @@ definitions:
         format: "int64"
       title:
         type: "string"
+        example: "The Party"
       created_at:
         type: "string"
         format: "date"
@@ -694,20 +736,25 @@ definitions:
         format: "date"
       description:
         type: "string"
+        example: "The hottest party of the year, since Covid-19"
       venue:
         type: "string"
+        example: "21 Kingston Road, Bog Walk, St. Catherine, Jamaica"
       image|flyer:
         type: "string"
         format: "url"
+        example: "flyer.jpg"
       website_url: 
         type: "string"
         format: "URL"
+        example: "https://theparty.com"
       status:
         type: "string"
         description: "The status of event"
         enum: [pending, published]
       uid:
-        type: "string"
+        type: "integer"
+        format: "int64"
         description: "user id of user who created the event"
     xml:
       name: "Order"
