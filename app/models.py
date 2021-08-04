@@ -1,30 +1,30 @@
-from . import db
+"""
+    Models for DuRoad API
+"""
 from werkzeug.security import generate_password_hash
-
+from . import db
 
 class User(db.Model):
+    """
+        User of Duroad api
+    """
     __tablename__ = 'User'
- 
+
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(1024))
     last_name = db.Column(db.String(1024))
-    username = db.Column(db.String(255))
     email = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255))
     profile_photo = db.Column(db.String(255))
-    role = db.Column(db.String(255))
     created_at = db.Column(db.DateTime(timezone=True))
-    
 
-    def __init__(self, first_name, last_name, username, password, email, role, profile_photo, created_at):
+    def __init__(self, first_name, last_name, password, email, profile_photo, created_at):
         self.first_name = first_name
         self.last_name = last_name
-        self.username = username
         self.password = generate_password_hash(password, method='pbkdf2:sha256')
         self.email = email
         self.profile_photo = profile_photo
         self.created_at = created_at
-        self.role = role
 
     def is_authenticated(self):
         return True
@@ -42,7 +42,7 @@ class User(db.Model):
             return str(self.id)  # python 3 support
 
     def __repr__(self):
-        return '<User %r, %r>' % (self.id, self.name) 
+        return '<User %r, %r>' % (self.id, self.name)
 
 class Event(db.Model):
     # You can use this to change the table name. The default convention is to use
@@ -60,7 +60,7 @@ class Event(db.Model):
     image = db.Column(db.String(255))
     website_url = db.Column(db.String(255))
     status = db.Column(db.String(255))
-    uid = db.Column(db.Integer, db.ForeignKey('user.id'))
+    uid = db.Column(db.Integer, db.ForeignKey('User.id'))
     created_at = db.Column(db.DateTime(timezone=True))
 
 
@@ -74,7 +74,7 @@ class Event(db.Model):
         self.image = image
         self.website_url = website_url
         self.status = status
-        self.uid = uid 
+        self.uid = uid
         self.created_at = created_at
 
 
@@ -87,7 +87,7 @@ class Group(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(1024))
-    admin = db.Column(db.Integer, db.ForeignKey('user.id'),  nullable=False)
+    admin = db.Column(db.Integer, db.ForeignKey('User.id'),  nullable=False)
     
     def __init__(self, name, admin):
         self.name = name
@@ -103,8 +103,8 @@ class Group(db.Model):
 class Affiliate(db.Model):
     __tablename__ = 'Affiliate'
 
-    userId = db.Column(db.String(1024), db.ForeignKey('user.id'), nullable=False, primary_key=True)
-    groupId = db.Column(db.String(1024), db.ForeignKey('group.id'), nullable=False, primary_key=True)
+    userId = db.Column(db.Integer, db.ForeignKey('User.id'), nullable=False, primary_key=True)
+    groupId = db.Column(db.Integer, db.ForeignKey('Group.id'), nullable=False, primary_key=True)
     
     def __init__(self, userId, groupId):
         self.userId = userId
@@ -112,14 +112,14 @@ class Affiliate(db.Model):
         
 
     def __repr__(self):
-        return '<Affiliate %r>' % (self.id)
+        return '<Affiliate %r,%r>' % (self.userId, self.groupId)
 
 
 class Schedule(db.Model):
     __tablename__ = 'Schedule'
 
-    eventId = db.Column(db.String(1024),  db.ForeignKey('event.id'), nullable=False, primary_key=True)
-    groupId = db.Column(db.String(1024), db.ForeignKey('group.id'), nullable=False, primary_key=True)
+    eventId = db.Column(db.Integer,  db.ForeignKey('Event.id'), nullable=False, primary_key=True)
+    groupId = db.Column(db.Integer, db.ForeignKey('Group.id'), nullable=False, primary_key=True)
     
     def __init__(self, eventId, groupId):
         self.eventId = eventId
@@ -127,14 +127,14 @@ class Schedule(db.Model):
         
 
     def __repr__(self):
-        return '<Schedule %r>' % (self.id)
+        return '<Schedule %r,%r>' % (self.eventId, self.groupId)
 
 
 class Submit(db.Model):
     __tablename__ = 'Submit'
 
-    eventId = db.Column(db.String(1024), db.ForeignKey('event.id'),  nullable=False, primary_key=True)
-    userId = db.Column(db.String(1024), db.ForeignKey('user.id'),  nullable=False, primary_key=True)
+    eventId = db.Column(db.Integer, db.ForeignKey('Event.id'),  nullable=False, primary_key=True)
+    userId = db.Column(db.Integer, db.ForeignKey('User.id'),  nullable=False, primary_key=True)
     
     def __init__(self, eventId, userId):
         self.eventId = eventId
@@ -142,4 +142,4 @@ class Submit(db.Model):
         
 
     def __repr__(self):
-        return '<Submit %r>' % (self.id)
+        return '<Submit %r,%r>' % (self.eventId, self.userId)

@@ -8,6 +8,7 @@ import os
 from app import app, db, login_manager
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort, jsonify, g, make_response
 from flask_login import login_user, logout_user, current_user, login_required
+from app.models import User, Event, Affiliate, Schedule, Submit
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 #from datetime import datetime, timezone
@@ -86,19 +87,17 @@ def register():
         ))
         
         # check if user already exists in database
-        if Users.query.filter_by(username = request.form['username']).first() \
-            or Users.query.filter_by(email = request.form['email']).first():
+        if User.query.filter_by(username = request.form['username']).first() \
+            or User.query.filter_by(email = request.form['email']).first():
                  return jsonify({'message': 'Username or email already exists.'}), 409
         else:
             # create user 
-            user = Users (
+            user = User(
                 first_name=request.form['firstname'],
                 last_name=request.form['lastname'],
-                username = request.form['username'],
                 password = request.form['password'], 
                 email = request.form['email'],
-                photo = "../../../profileUploads/" + filename,
-                role = request.form['role'],
+                profile_photo = "../../../profileUploads/" + filename,
                 created_at =  datetime.datetime.now(datetime.timezone.utc)
             )
 
@@ -107,7 +106,7 @@ def register():
             db.session.commit()
 
             #get the user from the db
-            newUser = Users.query.filter_by(username = request.form['username']).first()
+            newUser = User.query.filter_by(username = request.form['username']).first()
 
             #build api response with user data
             userResult = {
@@ -143,7 +142,7 @@ def login():
         username = request.json['username']
         password = request.json['password']
 
-        user = Users.query.filter_by(username=username).first()
+        user = User.query.filter_by(username=username).first()
 
         if user is not None and check_password_hash(user.password, password):
             login_user(user)
@@ -175,7 +174,7 @@ def login():
 # the user ID stored in the session
 @login_manager.user_loader
 def load_user(id):
-    return Users.query.get(int(id))
+    return User.query.get(int(id))
 
 
 @app.route('/api/auth/logout', methods=['POST'])
@@ -194,7 +193,7 @@ def logout():
 @app.route('/api/users/<user_id>', methods = ['GET'])
 # @requires_auth
 def getUser(user_id):
-    user = Users.query.filter_by(id = user_id).all()
+    user = User.query.filter_by(id = user_id).all()
     if len(user) !=0:
         for u in user:
             uid = u.id
@@ -221,28 +220,28 @@ def getUser(user_id):
 
 @app.route('/api/events', methods = ['GET'])
 @requires_auth
-def getAllEvents():
+def getAllEvent():
     if request.method == 'GET':
-        events = db.session.query(Events).all()
-        print(events)
+        event = db.session.query(Event).all()
+        print(event)
         result = []
-        if len(events) != 0:
-            for e in events:
+        if len(event) != 0:
+            for e in event:
                 id = e.id
                 title = e.title
                 description = e.description
                 start_date = e.start_date
                 end_date = e.end_date
-                venue = e.venue 
+                venue = e.venue
                 website_url = e.website_url
-                status = e.status 
+                status = e.status
                 image = e.image
                 uid = e.uid
                 cresult = {'id': id, "description": description, "title": title, "start_date": start_date, "end_date": end_date, "venue": venue, "website_url": website_url, "status": status, "image": image, "uid": uid}
                 result.append(cresult)
             return jsonify({'result': result}), 200
-        elif len(events) == 0: 
-            return jsonify({"result": events}), 404
+        elif len(event) == 0: 
+            return jsonify({"result": event}), 404
 
 @app.route('/api/events', methods = ['POST'])
 @requires_auth
@@ -259,18 +258,18 @@ def addEvents():
 
         # check if event already exists in database 
         # for a user to add a event, it must have at least one attribute that differs from all other events
-        if Events.query.filter_by(description = request.form['description']).first() \
-            and Events.query.filter_by(start_date = request.form['start_date']).first() \
-            and Events.query.filter_by(end_date = request.form['end_date']).first() \
-            and Events.query.filter_by(title = request.form['title']).first() \
-            and Events.query.filter_by(venue = request.form['venue']).first() \
-            and Events.query.filter_by(website_url = request.form['website_url']).first() \
-            and Events.query.filter_by(status = request.form['status']).first() \
-            and Events.query.filter_by(uid = request.form['uid']).first() \
-            and Events.query.filter_by(image = eventPhotoPath).first():
+        if Event.query.filter_by(description = request.form['description']).first() \
+            and Event.query.filter_by(start_date = request.form['start_date']).first() \
+            and Event.query.filter_by(end_date = request.form['end_date']).first() \
+            and Event.query.filter_by(title = request.form['title']).first() \
+            and Event.query.filter_by(venue = request.form['venue']).first() \
+            and Event.query.filter_by(website_url = request.form['website_url']).first() \
+            and Event.query.filter_by(status = request.form['status']).first() \
+            and Event.query.filter_by(uid = request.form['uid']).first() \
+            and Event.query.filter_by(image = eventPhotoPath).first():
                 return jsonify({'message': 'Event already exists.'}), 409
         else:
-            event = Events(
+            event = Event(
                 description = request.form['description'],
                 start_date = request.form['start_date'],
                 end_date = request.form['end_date'],
@@ -287,7 +286,7 @@ def addEvents():
             db.session.commit()
 
             #get the event from the db (using description, user_id and photo to identify)
-            newEvent = Events.query.filter_by(description = request.form['description']) \
+            newEvent = Event.query.filter_by(description = request.form['description']) \
                                 .filter_by(uid = request.form['uid']) \
                                 .filter_by(image = eventPhotoPath) \
                                 .first()
@@ -312,7 +311,7 @@ def addEvents():
 @app.route('/api/events/<id>', methods = ['GET'])
 @requires_auth
 def getevent(id):
-    event = Events.query.filter_by(id = id).all()  # .all() is used on the BaseQuery to return an array for the results, allowing us to evaluate if we got no reult
+    event = Event.query.filter_by(id = id).all()  # .all() is used on the BaseQuery to return an array for the results, allowing us to evaluate if we got no reult
 
     if len(event) !=0:
         for e in event:

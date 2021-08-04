@@ -1,3 +1,5 @@
+""" Config for Duroad app
+"""
 import os
 
 class Config(object):

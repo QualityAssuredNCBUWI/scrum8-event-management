@@ -1,3 +1,6 @@
+"""
+    Init file for DuRoad API
+"""
 import os
 from flask import Flask
 from flask_login import LoginManager
@@ -17,22 +20,6 @@ app = Flask(__name__)
 db = SQLAlchemy(app) #db csetup
 
 csrf = CSRFProtect(app) #csrf token form page and from validation
-
-
-# app.config['DATABASE_HOST'] = os.environ.get('DATABASE_HOST') or '192.168.64.2'
-# app.config['DATABASE_USER'] = os.environ.get('DATABASE_USER') or 'root'
-# app.config['DATABASE_PASSWORD'] = os.environ.get('DATABASE_PASSWORD') or ''
-# app.config['DATABASE_NAME'] = os.environ.get('DATABASE_NAME') or 'duroad'
-
-# Connect to mysql database
-# def connectdb():
-#     db = mysql.connect(host= app.config['DATABASE_HOST'], 
-#                     database= app.config['DATABASE_NAME'],
-#                     user= app.config['DATABASE_USER'],
-#                     password= app.config['DATABASE_PASSWORD'])  
-#     return db
-
-# db = connectdb()
 
 # Flask-Login login manager
 login_manager = LoginManager()
