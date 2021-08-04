@@ -1,18 +1,27 @@
 """
     Init file for DuRoad API
 """
+import os
 from flask import Flask
 from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
-from .config import Config
+import pymysql
+# import mysql.connector as mysql
+from dotenv import load_dotenv
 
-app = Flask(__name__)
-db = SQLAlchemy(app)
-#csrf = CSRFProtect(app)
+load_dotenv() #load the env file 
+from .config import Config #configurations
+
+
+
+app = Flask(__name__) 
+
+db = SQLAlchemy(app) #db csetup
+
+csrf = CSRFProtect(app) #csrf token form page and from validation
 
 # Flask-Login login manager
-
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -22,4 +31,4 @@ login_manager.login_view = 'login'
 
 app.config.from_object(Config)
 from app import views, models
-from app.models import *
+# from app.models import *
