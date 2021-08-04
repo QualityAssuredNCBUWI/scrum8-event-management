@@ -2,13 +2,8 @@ from . import db
 from werkzeug.security import generate_password_hash
 
 
-affiliation = db.Table('affiliation', 
-    db.Column('uid', db.Integer, db.ForignKey('users.id'), primary_key=True),
-    db.Column('groupid', db.Integer, db.ForeignKey('groups.id'), primary_key=True )
-    )
-
-class Users(db.Model):
-    __tablename__ = 'Users'
+class User(db.Model):
+    __tablename__ = 'User'
  
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(1024))
@@ -19,10 +14,9 @@ class Users(db.Model):
     profile_photo = db.Column(db.String(255))
     role = db.Column(db.String(255))
     created_at = db.Column(db.DateTime(timezone=True))
-    groups = db.relationship("Groups",  secondary=affiliation)
     
 
-    def __init__(self, first_name, last_name, username, password, email, role, profile_photo, created_at, groups):
+    def __init__(self, first_name, last_name, username, password, email, role, profile_photo, created_at):
         self.first_name = first_name
         self.last_name = last_name
         self.username = username
@@ -31,7 +25,6 @@ class Users(db.Model):
         self.profile_photo = profile_photo
         self.created_at = created_at
         self.role = role
-        self.groups=groups
 
     def is_authenticated(self):
         return True
@@ -51,12 +44,12 @@ class Users(db.Model):
     def __repr__(self):
         return '<User %r, %r>' % (self.id, self.name) 
 
-class Events(db.Model):
+class Event(db.Model):
     # You can use this to change the table name. The default convention is to use
     # the class name. In this case a class name of UserProfile would create a
     # user_profile (singular) table, but if we specify __tablename__ we can change it
     # to `user_profiles` (plural) or some other name.
-    __tablename__ = 'Events'
+    __tablename__ = 'Event'
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(1024))
@@ -67,7 +60,7 @@ class Events(db.Model):
     image = db.Column(db.String(255))
     website_url = db.Column(db.String(255))
     status = db.Column(db.String(255))
-    uid = db.Column(db.Integer, db.ForeignKey('users.id'))
+    uid = db.Column(db.Integer, db.ForeignKey('user.id'))
     created_at = db.Column(db.DateTime(timezone=True))
 
 
@@ -86,15 +79,15 @@ class Events(db.Model):
 
 
     def __repr__(self):
-        return '<Events %r>' % (self.id)
+        return '<Event %r>' % (self.id)
 
 
-class Groups(db.Model):
-    __tablename__ = 'Groups'
+class Group(db.Model):
+    __tablename__ = 'Group'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(1024))
-    admin = db.Column(db.Integer, db.ForeignKey('users.id'))
+    admin = db.Column(db.Integer, db.ForeignKey('user.id'),  nullable=False)
     
     def __init__(self, name, admin):
         self.name = name
@@ -102,7 +95,7 @@ class Groups(db.Model):
         
 
     def __repr__(self):
-        return '<Groups %r>' % (self.id)
+        return '<Group %r>' % (self.id)
 
 
 
@@ -110,8 +103,8 @@ class Groups(db.Model):
 class Affiliate(db.Model):
     __tablename__ = 'Affiliate'
 
-    userId = db.Column(db.String(1024), foreign_key=True)
-    groupId = db.Column(db.String(1024), foreign_key=True)
+    userId = db.Column(db.String(1024), db.ForeignKey('user.id'), nullable=False)
+    groupId = db.Column(db.String(1024), db.ForeignKey('group.id'), nullable=False)
     
     def __init__(self, userId, groupId):
         self.userId = userId
@@ -125,8 +118,8 @@ class Affiliate(db.Model):
 class Schedule(db.Model):
     __tablename__ = 'Schedule'
 
-    eventId = db.Column(db.String(1024), foreign_key=True)
-    groupId = db.Column(db.String(1024), foreign_key=True)
+    eventId = db.Column(db.String(1024),  db.ForeignKey('event.id'), nullable=False)
+    groupId = db.Column(db.String(1024), db.ForeignKey('group.id'), nullable=False)
     
     def __init__(self, eventId, groupId):
         self.eventId = eventId
@@ -140,8 +133,8 @@ class Schedule(db.Model):
 class Submit(db.Model):
     __tablename__ = 'Submit'
 
-    eventId = db.Column(db.String(1024), foreign_key=True)
-    userId = db.Column(db.String(1024), foreign_key=True)
+    eventId = db.Column(db.String(1024), db.ForeignKey('event.id'),  nullable=False)
+    userId = db.Column(db.String(1024), db.ForeignKey('user.id'),  nullable=False)
     
     def __init__(self, eventId, userId):
         self.eventId = eventId
