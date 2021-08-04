@@ -1,30 +1,27 @@
-from . import db
 from werkzeug.security import generate_password_hash
-
+from . import db
 
 class User(db.Model):
+    """
+        User of Duroad api
+    """
     __tablename__ = 'User'
- 
+
     id = db.Column(db.Integer, primary_key=True)
     first_name = db.Column(db.String(1024))
     last_name = db.Column(db.String(1024))
-    username = db.Column(db.String(255))
     email = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255))
     profile_photo = db.Column(db.String(255))
-    role = db.Column(db.String(255))
     created_at = db.Column(db.DateTime(timezone=True))
-    
 
-    def __init__(self, first_name, last_name, username, password, email, role, profile_photo, created_at):
+    def __init__(self, first_name, last_name, password, email, profile_photo, created_at):
         self.first_name = first_name
         self.last_name = last_name
-        self.username = username
         self.password = generate_password_hash(password, method='pbkdf2:sha256')
         self.email = email
         self.profile_photo = profile_photo
         self.created_at = created_at
-        self.role = role
 
     def is_authenticated(self):
         return True
@@ -103,8 +100,8 @@ class Group(db.Model):
 class Affiliate(db.Model):
     __tablename__ = 'Affiliate'
 
-    userId = db.Column(db.String(1024), db.ForeignKey('user.id'), nullable=False, primary_key=True)
-    groupId = db.Column(db.String(1024), db.ForeignKey('group.id'), nullable=False, primary_key=True)
+    userId = db.Column(db.Integer, db.ForeignKey('User.id'), nullable=False, primary_key=True)
+    groupId = db.Column(db.Integer, db.ForeignKey('Group.id'), nullable=False, primary_key=True)
     
     def __init__(self, userId, groupId):
         self.userId = userId
@@ -112,14 +109,14 @@ class Affiliate(db.Model):
         
 
     def __repr__(self):
-        return '<Affiliate %r>' % (self.id)
+        return '<Affiliate %r,%r>' % (self.userId, self.groupId)
 
 
 class Schedule(db.Model):
     __tablename__ = 'Schedule'
 
-    eventId = db.Column(db.String(1024),  db.ForeignKey('event.id'), nullable=False, primary_key=True)
-    groupId = db.Column(db.String(1024), db.ForeignKey('group.id'), nullable=False, primary_key=True)
+    eventId = db.Column(db.Integer,  db.ForeignKey('Event.id'), nullable=False, primary_key=True)
+    groupId = db.Column(db.Integer, db.ForeignKey('Group.id'), nullable=False, primary_key=True)
     
     def __init__(self, eventId, groupId):
         self.eventId = eventId
@@ -127,14 +124,14 @@ class Schedule(db.Model):
         
 
     def __repr__(self):
-        return '<Schedule %r>' % (self.id)
+        return '<Schedule %r,%r>' % (self.eventId, self.groupId)
 
 
 class Submit(db.Model):
     __tablename__ = 'Submit'
 
-    eventId = db.Column(db.String(1024), db.ForeignKey('event.id'),  nullable=False, primary_key=True)
-    userId = db.Column(db.String(1024), db.ForeignKey('user.id'),  nullable=False, primary_key=True)
+    eventId = db.Column(db.Integer, db.ForeignKey('Event.id'),  nullable=False, primary_key=True)
+    userId = db.Column(db.Integer, db.ForeignKey('User.id'),  nullable=False, primary_key=True)
     
     def __init__(self, eventId, userId):
         self.eventId = eventId
@@ -142,4 +139,4 @@ class Submit(db.Model):
         
 
     def __repr__(self):
-        return '<Submit %r>' % (self.id)
+        return '<Submit %r,%r>' % (self.eventId, self.userId)

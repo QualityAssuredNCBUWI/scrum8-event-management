@@ -420,7 +420,7 @@ definitions:
       venue:
         type: "string"
         example: "21 Kingston Road, Bog Walk, St. Catherine, Jamaica"
-      image|flyer:
+      image:
         type: "string"
         format: "url"
         example: "flyer.jpg"
