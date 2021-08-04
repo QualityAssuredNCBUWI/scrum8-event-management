@@ -1,0 +1,7 @@
+{
+    "python.pythonPath": "venv/bin/python3",
+    "python.linting.pylintArgs": [
+        "--load-plugins",
+        "pylint_flask_sqlalchemy"
+    ]
+}
