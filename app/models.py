@@ -60,7 +60,7 @@ class Event(db.Model):
     image = db.Column(db.String(255))
     website_url = db.Column(db.String(255))
     status = db.Column(db.String(255))
-    uid = db.Column(db.Integer, db.ForeignKey('user.id'))
+    uid = db.Column(db.Integer, db.ForeignKey('User.id'))
     created_at = db.Column(db.DateTime(timezone=True))
 
 
@@ -87,7 +87,7 @@ class Group(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(1024))
-    admin = db.Column(db.Integer, db.ForeignKey('user.id'),  nullable=False)
+    admin = db.Column(db.Integer, db.ForeignKey('User.id'),  nullable=False)
     
     def __init__(self, name, admin):
         self.name = name
@@ -103,8 +103,8 @@ class Group(db.Model):
 class Affiliate(db.Model):
     __tablename__ = 'Affiliate'
 
-    userId = db.Column(db.String(1024), db.ForeignKey('user.id'), nullable=False, primary_key=True)
-    groupId = db.Column(db.String(1024), db.ForeignKey('group.id'), nullable=False, primary_key=True)
+    userId = db.Column(db.Integer, db.ForeignKey('User.id'), nullable=False, primary_key=True)
+    groupId = db.Column(db.Integer, db.ForeignKey('Group.id'), nullable=False, primary_key=True)
     
     def __init__(self, userId, groupId):
         self.userId = userId
@@ -118,8 +118,8 @@ class Affiliate(db.Model):
 class Schedule(db.Model):
     __tablename__ = 'Schedule'
 
-    eventId = db.Column(db.String(1024),  db.ForeignKey('event.id'), nullable=False, primary_key=True)
-    groupId = db.Column(db.String(1024), db.ForeignKey('group.id'), nullable=False, primary_key=True)
+    eventId = db.Column(db.Integer,  db.ForeignKey('Event.id'), nullable=False, primary_key=True)
+    groupId = db.Column(db.Integer, db.ForeignKey('Group.id'), nullable=False, primary_key=True)
     
     def __init__(self, eventId, groupId):
         self.eventId = eventId
@@ -133,8 +133,8 @@ class Schedule(db.Model):
 class Submit(db.Model):
     __tablename__ = 'Submit'
 
-    eventId = db.Column(db.String(1024), db.ForeignKey('event.id'),  nullable=False, primary_key=True)
-    userId = db.Column(db.String(1024), db.ForeignKey('user.id'),  nullable=False, primary_key=True)
+    eventId = db.Column(db.Integer, db.ForeignKey('Event.id'),  nullable=False, primary_key=True)
+    userId = db.Column(db.Integer, db.ForeignKey('User.id'),  nullable=False, primary_key=True)
     
     def __init__(self, eventId, userId):
         self.eventId = eventId
