@@ -70,15 +70,7 @@ def requires_auth(f):
 # This route doesn't require a JWT
 @app.route('/api/register', methods=['POST'])
 def register(): 
-    # if the request data is not there
-    # or any of the username/password/name/email is missing
-    # respond with a bad request code and stop registration
-    # if not request.json: # or not 'username' in request.json or not 'password' in request.json or not 'name' in request.json or not 'email' in request.json:
-    #    abort(400) #bad request http code
-    #if not request.form: # or not 'username' in request.form or not 'password' in request.form or not 'name' in request.form or not 'email' in request.form:
-     #  abort(400) #bad request http code
-
-    if request.form: #TBD:update to check for essentials
+    if request.form : #TBD:update to check for essentials
         # get photo filename
         rawPhoto = request.files['photo']
         filename = secure_filename(rawPhoto.filename)
@@ -87,9 +79,8 @@ def register():
         ))
         
         # check if user already exists in database
-        if User.query.filter_by(username = request.form['username']).first() \
-            or User.query.filter_by(email = request.form['email']).first():
-                 return jsonify({'message': 'Username or email already exists.'}), 409
+        if User.query.filter_by(email = request.form['email']).first():
+                 return jsonify({'message': 'Email already exists.'}), 409
         else:
             # create user 
             user = User(
@@ -106,29 +97,26 @@ def register():
             db.session.commit()
 
             #get the user from the db
-            newUser = User.query.filter_by(username = request.form['username']).first()
+            newUser = User.query.filter_by(email = request.form['email']).first()
 
             #build api response with user data
             userResult = {
                 'id': newUser.id, 
-                'username': newUser.username,
-                'firstname': newUser.firstname,
-                'lastname': newUser.lastname,
+                'firstname': newUser.first_name,
+                'lastname': newUser.last_name,
                 'email': newUser.email,
-                'photo': newUser.photo,
+                'photo': newUser.profile_photo,
                 'created_at': newUser.created_at
             }
             
             #send api response
-            # return jsonify({'user': userResult}), 201
-            return jsonify({'id': newUser.id, \
-                            'username': newUser.username,   \
-                            'name''username': newUser.username,\
-                            'firstname': newUser.firstname, \
-                            'lastname': newUser.lastname, \
-                            'email': newUser.email, \
-                            'photo': newUser.photo,\
-                            'created_at': newUser.created_at}), 201
+            return jsonify(userResult), 201
+            # return jsonify({'id': newUser.id, \
+            #                 'firstname': newUser.first_name, \
+            #                 'lastname': newUser.last_name, \
+            #                 'email': newUser.email, \
+            #                 'photo': newUser.photo,\
+            #                 'created_at': newUser.created_at}), 201
     else:
     #    abort(400) #bad request http code
         return jsonify({'user': []}), 400
@@ -136,13 +124,13 @@ def register():
 
 @app.route('/api/auth/login', methods=['POST'])
 def login(): 
-    if not request.json or not 'username' in request.json or not 'password' in request.json:
+    if not request.json or not 'email' in request.json or not 'password' in request.json:
        abort(400) #bad request http code
     else:
-        username = request.json['username']
+        email = request.json['email']
         password = request.json['password']
 
-        user = User.query.filter_by(username=username).first()
+        user = User.query.filter_by(email=email).first()
 
         if user is not None and check_password_hash(user.password, password):
             login_user(user)
@@ -150,7 +138,7 @@ def login():
             #generate JWT token
             payload = {
                 'sub': user.id, #technical identifier of the user
-                'name': user.name,
+                'email': user.email,
                 'iat': datetime.datetime.now(datetime.timezone.utc), #current time -- generate timestamp
                 'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10) #token expires in 10 mins -- generate timestamp
             }
@@ -197,17 +185,15 @@ def getUser(user_id):
     if len(user) !=0:
         for u in user:
             uid = u.id
-            username = u.username
-            name = u.name
+            first_name = u.first_name
+            last_name = u.last_name
             email = u.email
-            location = u.location
-            biography = u.biography
-            photo = u.photo
-            date_joined = u.date_joined
+            photo = u.profile_photo
+            created_at = u.created_at
 
         # result = {'id': uid, "username": username, "password": password, "name": name, "email": email, "location": location, "biography": biography, "photo": photo, "date_joined": date_joined}
         # return jsonify({'result':result}), 200
-        return jsonify({'id': uid, "username": username, "name": name, "email": email, "location": location, "biography": biography, "photo": photo, "date_joined": date_joined}), 200
+        return jsonify({'id': uid, "first_name": first_name, "last_name": last_name, "email": email, "photo": photo, "created_at": created_at}), 200
     elif len(user) == 0: 
         return jsonify({"result": user}), 404
     # else:
@@ -244,7 +230,7 @@ def getAllEvent():
             return jsonify({"result": event}), 404
 
 @app.route('/api/events', methods = ['POST'])
-@requires_auth
+# @requires_auth
 def addEvents():
     if request.form:
         # get photo filename
@@ -309,7 +295,7 @@ def addEvents():
 
 
 @app.route('/api/events/<id>', methods = ['GET'])
-@requires_auth
+# @requires_auth
 def getevent(id):
     event = Event.query.filter_by(id = id).all()  # .all() is used on the BaseQuery to return an array for the results, allowing us to evaluate if we got no reult
 

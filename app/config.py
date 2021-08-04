@@ -5,8 +5,8 @@ import os
 class Config(object):
     """Base Config Object"""
     DEBUG = False
-    SECRET_KEY = os.environ.get('SECRET_KEY') or ' '
-    SQLALCHEMY_DATABASE_URI = os.environ.get('MY_DATABASE_URL')  or 'mysql+pymysql://root:@localhost/duroad'
+    SECRET_KEY = os.environ.get('SECRET_KEY') 
+    SQLALCHEMY_DATABASE_URI = os.environ.get('MY_DATABASE_URL')  
     SQLALCHEMY_TRACK_MODIFICATIONS = False # This is just here to suppress a warning from SQLAlchemy as it will soon be removed
     
     PROFILE_UPLOAD_FOLDER = os.environ.get('PROFILE_UPLOAD_FOLDER') or './profileUploads'
