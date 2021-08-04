@@ -8,12 +8,11 @@ import os
 from app import app, db, login_manager
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort, jsonify, g, make_response
 from flask_login import login_user, logout_user, current_user, login_required
-from app.models import User, Event
+from app.models import User, Event, Affiliate, Schedule, Submit
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 #from datetime import datetime, timezone
 import datetime
-from app.models import User, Event
 
 # Using JWT
 import jwt
@@ -96,11 +95,9 @@ def register():
             user = User(
                 first_name=request.form['firstname'],
                 last_name=request.form['lastname'],
-                username = request.form['username'],
                 password = request.form['password'], 
                 email = request.form['email'],
-                photo = "../../../profileUploads/" + filename,
-                role = request.form['role'],
+                profile_photo = "../../../profileUploads/" + filename,
                 created_at =  datetime.datetime.now(datetime.timezone.utc)
             )
 

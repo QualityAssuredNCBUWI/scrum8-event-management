@@ -1,3 +1,6 @@
+"""
+    Models for DuRoad API
+"""
 from werkzeug.security import generate_password_hash
 from . import db
 
@@ -39,7 +42,7 @@ class User(db.Model):
             return str(self.id)  # python 3 support
 
     def __repr__(self):
-        return '<User %r, %r>' % (self.id, self.name) 
+        return '<User %r, %r>' % (self.id, self.name)
 
 class Event(db.Model):
     # You can use this to change the table name. The default convention is to use
@@ -71,7 +74,7 @@ class Event(db.Model):
         self.image = image
         self.website_url = website_url
         self.status = status
-        self.uid = uid 
+        self.uid = uid
         self.created_at = created_at
 
 
