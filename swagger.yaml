@@ -278,7 +278,62 @@ paths:
         "201":
           description: "Account created"
           schema:
-            $ref: "#/definitions/Users"
+
+          
+  /api/user/{user_id}:
+    get:
+      tags:
+      - "user"
+      summary: "retrieves user-specific id"
+      description: "allows a user to view their profile information"
+      operationId: "getUserById"
+      produces:
+      - "application/json"
+      parameters:
+      -  name: "user_id"
+         in: "path"
+         description: "attribute of user object"
+         type: "integer"
+         format: "int64" 
+         required: true
+      responses:
+          "200":
+            description: "User specific Id is retrieved"
+            schema:
+              $ref: "#/definitions/User"
+          "400":
+            description: "User specific Id is not retrieved"
+            schema:
+              $ref: "#/definitions/User"
+      security:
+      - api_key: []
+      
+    put: 
+      tags: 
+      - "user"
+      summary: "update user profile "
+      description: "allows a user to update their profile"
+      operationId: "updateUserProfileById"
+      produces:
+      - "application/json"
+      parameters: 
+      - name: "user_id"
+        in: "path"
+        description: "attribute of user object"
+        type: "integer"
+        format: "int64"
+        required: true
+      responses:
+          "200":
+            description: "User profile updated"
+            schema:
+              $ref: "#/definitions/User"
+          "400":
+            description: "User profile is not updated"
+            schema:
+             $ref: "#/definitions/User"
+      security:
+       - api_key: []
             
   /api/auth/login:
     post:
