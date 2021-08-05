@@ -1,5 +1,5 @@
 import os, re
-from app import app, db, login_manager
+from app import app, db
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort, jsonify, g, make_response
 # from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -138,6 +138,7 @@ def getUser(user_id):
         pass
     return jsonify({"status":"An error occured"}),400
 
+
 @app.route('/api/users/current', methods = ['GET'])
 @requires_auth
 def getCurrentUser():
@@ -171,7 +172,7 @@ def getCurrentUser():
 @app.route('/api/users/current', methods = ['PUT'])
 @requires_auth
 def updateCurrentUser():
-    # try:
+    try:
         if request.form:
             error_found = False
             errors = []
@@ -246,10 +247,91 @@ def updateCurrentUser():
                 "status": "user updated",
                 "user": user_response
             }), 200
-    # except:
-    #     pass
-    # return jsonify({"status":"An error occured"}),400
+    except:
+        pass
+    return jsonify({"status":"An error occured"}),400
 
+
+@app.route('/api/users/<user_id>', methods = ['PUT']) #update user endpoint
+@requires_auth #ensure the user is logged in
+def updateUser(user_id):
+    try:
+        if request.form:
+            error_found = False
+            errors = []
+
+            if (not isinstance(user_id, int) and not user_id.isnumeric()): 
+                return jsonify({"Status":"Invalid user ID"}),406
+
+            user = User.query.get(user_id)
+            if(user is None): 
+                return jsonify({"status":"user is unavailable"}),404
+            
+            # update each user field if its available
+            if('photo' in request.files):
+                rawPhoto = request.files['photo']
+                filename = secure_filename(rawPhoto.filename)
+                rawPhoto.save(os.path.join(
+                    app.config['PROFILE_UPLOAD_FOLDER'], filename
+                ))
+                user.profile_photo = filename
+            
+            # update firstname
+            if('firstname' in request.form):
+                user.first_name = request.form['firstname']
+            
+            # update lastname
+            if('lastname' in request.form):
+                user.last_name = request.form['lastname']
+            
+            # update email
+            if('email' in request.form):
+                if('confirm_email' in request.form):
+                    if(request.form['email'] == request.form['confirm_email']):
+                        user.email = request.form['email']
+                    else:
+                        error_found = True
+                        errors.append("The emails are different")
+                else:
+                    error_found = True
+                    errors.append("The ( confirm_email ) field is required")
+            
+            # update password
+            if('password' in request.form):
+                if('confirm_password' in request.form):
+                    if(request.form['password'] == request.form['confirm_password']):
+                        user.password = generate_password_hash(request.form['password'], method='pbkdf2:sha256') 
+                    else:
+                        error_found = True
+                        errors.append("The passwords are different")
+                else:
+                    error_found = True
+                    errors.append("The ( confirm_password ) field is required")
+            
+            if(error_found):
+                return jsonify({
+                    "status": "Incorrect or missing fields",
+                    "errors": errors
+                }), 406
+
+            db.session.commit()
+
+            user_response = {
+                "id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email,
+                "profile_photo": user.profile_photo,
+                "created_at": user.created_at
+            }
+
+            return jsonify({
+                "status": "user updated",
+                "user": user_response
+            }), 200
+    except:
+        pass
+    return jsonify({"status":"An error occured"}),400
 
 
 """              API: Events              """
@@ -421,55 +503,69 @@ def getevent(event_id):
 @app.route('/api/events/<event_id>', methods = ['PUT']) #update user endpoint
 @requires_auth #ensure the user is logged in
 def updateEvent(event_id):
-
-
     # event= Event.query.filter_by(id=event_id).first()
     schedule = Schedule.query.filter_by(eventId=event_id).first()
-    group = Group.query.filter_by(id=schedule.groupId)
+    group = Group.query.filter_by(id=schedule.groupId).first()
     # check if the current user it the admin for the group responsible for the event
     if g.current_user['sub'] == group.admin:
         # {title, start_date, end_date, description, venue, websiteurl, status}= request.form
         data = request.form
         event = Event.query.filter_by(id=event_id).first()
-        event.start_date = data.start_date
-        event.end_date = data.end_date
-        event.description = data.description
-        event.venue = data.venue
-        event.websiteurl = data.websiteurl
-        event.status = data.status
+        # event.start_date = data.start_date
+        # event.end_date = data.end_date
+        # event.description = data.description
+        # event.venue = data.venue
+        # event.websiteurl = data.websiteurl
+        event.status = data['status']
         db.session.commit()
         # event.status = 'Published'
-        # return jsonify({'id': event.id, 'status': event.status})
+        return jsonify({'id': event.id, 'status': event.status})
     else:
         return jsonify({'result': 'Not allowed'}), 400
 
-@app.route('/api/events/<event_id>', methods= ['DELETE']) 
+@app.route('/api/events/<event_id>', methods = ['DELETE']) 
 @requires_auth
 def removeEvent(event_id):
-    schedule = Schedule.filter_by(eventId=event_id).first()
+    schedule = Schedule.query.filter_by(eventId=event_id).first()
     group = Group.query.filter_by(id=schedule.groupId).first()
     if g.current_user['sub'] == group.admin:
         event = Event.query.filter_by(id=event_id).first()
+        schedule = Schedule.query.filter_by(eventId=event_id).first()
+        submit = Submit.query.filter_by(eventId=event_id).first()
 
-        try:
-            db.session.delete(event)
-            db.session.commit()
-
-        except:
-            return "There was an issue"
+        
+        db.session.delete(schedule)
+        db.session.delete(submit)
+        db.session.delete(event)
+       
+        db.session.commit()
+        if( Event.query.filter_by(id=event_id).first() is not None or Schedule.query.filter_by(eventId=event_id).first() is not None or Submit.query.filter.filter_by(eventId=event_id).first() is not None):
+            return ({'result': 'Unable to delete event'}), 400  
+        # except:
+        #     return jsonify({'message': 'There was an issue'}), 500
     else:
         return jsonify({'result': 'Not allowed'}), 400        
 
-
-@app.route('/api/events/groups/<group_id>', methods= ['GET'])
-def getEventsInGroup(group_id): 
+@app.route('/api/events/groups/<group_id>/pending', methods = ['GET']) #update user endpoint
+@requires_auth #ensure the user is logged in
+def getPending(group_id):
     try:
-        if (not isinstance(group_id, int) and not group_id.isnumeric()): abort(400)
+        user_id = g.current_user['sub']
+        if (not isinstance(user_id, int) and not user_id.isnumeric()): 
+            return jsonify({"Status":"Invalid user ID"}),406
 
-        if ( Group.query.get(group_id) == None): 
-            return jsonify({"status":"Group unavailable"}),404
+        if (not isinstance(group_id, int) and not group_id.isnumeric()): 
+            return jsonify({"Status":"Invalid group ID"}),406 
         
-        # get the evnts if the group exist
+        group = Group.query.get(group_id)
+        if ( group == None): 
+            return jsonify({"status":"Group unavailable"}),404
+
+        # check if the user is the group admin
+        if(group.admin != user_id):
+            return jsonify({"status":"User is not the group admin"}),401
+
+        # get the events if the group exist
         schedules = Schedule.query.filter_by(groupId = group_id).all()
 
         events = []
@@ -496,9 +592,44 @@ def getEventsInGroup(group_id):
         pass
 
     return jsonify({"status":"an error occured"})
+            
+
+@app.route('/api/events/groups/<group_id>', methods= ['GET'])
+def getEventsInGroup(group_id): 
+    try:
+        if (not isinstance(group_id, int) and not group_id.isnumeric()): abort(400)
+
+        if ( Group.query.get(group_id) == None): 
+            return jsonify({"status":"Group unavailable"}),404
+        
+        # get the evnts if the group exist
+        schedules = Schedule.query.filter_by(groupId = group_id).all()
+
+        events = []
+
+        for schedule in schedules:
+            event = Event.query.get(schedule.eventId)
+            if(event.status == "active"):
+                events.append({
+                    'id': event.id,
+                    'title': event.title,
+                    'start_date': event.start_date,
+                    'end_date': event.end_date,
+                    'description': event.description,
+                    'venue': event.venue,
+                    'image': event.image,
+                    'website_url': event.website_url,
+                    'status': event.status,
+                    'user_id': event.uid,
+                    'created_date': event.created_at
+                })
+
+        return jsonify({"status": "events", "group": group_id, "events":events})
+    except:
+        pass
+
+    return jsonify({"status":"an error occured"})
     
-
-
 
 """              API: Group              """
 @app.route('/api/groups/<groupId>,<email>', methods = ['POST'])
@@ -506,15 +637,19 @@ def getEventsInGroup(group_id):
 def addMember(groupId, email):
     # ! should i get the email from a for field or should it just be passed in?
     # Check if the logged in user is the admin of the group they want to add the user to 
-    isAdmin = db.session.query(db.exists().where(Group.id == groupId, Group.admin==g.current_user['sub'])).scalar()
+    # get admin of group thru id
+    group = db.session.query(Group).filter_by(id=groupId).first()
+    admin = group.admin
+
+    
     # Check if the member exists    
     memberExists = db.session.query(db.exists().where(User.email==email)).scalar()
-    
-    if isAdmin == True: 
-        if memberExists==True:
-            member = User.query.filter_by(email=email).first()
+    member = db.session.query(User).filter_by(email=email).first()
+
+    if admin == g.current_user['sub']: 
+        if member is not None:
             # Check if the member already exist in the affiliate table
-            if Affiliate.query.filter_by(userId=member.id):
+            if Affiliate.query.filter_by(userId=member.id, groupId=groupId).first():
                 return jsonify({'message': 'User already a member'}), 409
             else:
                 # Update the affiliation table with the new member 
@@ -538,28 +673,6 @@ def addMember(groupId, email):
         return jsonify({'message': 'Must be logged into an active session and be admin of group'}), 400
 
 
-# @app.route('/api/groups/<groupId>,<eventId>', methods = ['POST'])
-# @requires_auth
-def attachEventToGroup(groupId, eventId):
-    # Check if event, group mapping already exists in the schedule table
-    if Schedule.query.filter_by(eventId=eventId, groupId=groupId):
-        return jsonify({'message': 'Event already attached to group'}), 409
-    else:
-        schedule=Schedule(
-            eventId=eventId,
-            groupId=groupId
-        )
-
-        # Add member to Affiliation in db
-        db.session.add(schedule)
-        db.session.commit()
-
-        # get the new member just added
-        neweventgroup = Schedule.query.filter_by(eventId=eventId, groupId=groupId).first()
-
-        # build jsonify response
-        return jsonify({'eventId': neweventgroup.eventId, 'groupId': neweventgroup.groupId}), 201
-
 @app.route('/api/groups', methods = ['POST'])
 @requires_auth
 def createGroup():    
@@ -582,6 +695,19 @@ def createGroup():
             # get the new member just added
             newgroup = Group.query.filter_by(name=groupName).first()
 
+           # Check if the member already exist in the affiliate table
+            if Affiliate.query.filter_by(userId=g.current_user['sub'], groupId=newgroup.id).first():
+                return jsonify({'message': 'User already a member'}), 409
+            else:
+                # Update the affiliation table with the new member 
+                affiliate=  Affiliate(
+                    userId= g.current_user['sub'],
+                    groupId=newgroup.id
+                )
+
+                # Add member to Affiliation in db
+                db.session.add(affiliate)
+                db.session.commit()
             # build jsonify response
             return jsonify({'id': newgroup.id, 'name': newgroup.name, 'admin': newgroup.admin}), 201
 
