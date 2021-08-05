@@ -9,8 +9,8 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = os.environ.get('MY_DATABASE_URL')  
     SQLALCHEMY_TRACK_MODIFICATIONS = False # This is just here to suppress a warning from SQLAlchemy as it will soon be removed
     
-    PROFILE_UPLOAD_FOLDER = os.environ.get('PROFILE_UPLOAD_FOLDER') or './app/files/upload/profile'
-    EVENT_UPLOAD_FOLDER = os.environ.get('EVENT_UPLOAD_FOLDER') or './app/files/upload/event'
+    PROFILE_UPLOAD_FOLDER = os.environ.get('PROFILE_UPLOAD_FOLDER') or './app/static/files/upload/profile'
+    EVENT_UPLOAD_FOLDER = os.environ.get('EVENT_UPLOAD_FOLDER') or './app/static/files/upload/event'
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 
 class DevelopmentConfig(Config):
