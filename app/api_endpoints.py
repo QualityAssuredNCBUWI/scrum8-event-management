@@ -1,18 +1,18 @@
-import os
+import os, re
 from app import app, db, login_manager
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort, jsonify, g, make_response
 # from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
-import datetime
+from datetime import datetime
 from app.models import *
 from app.forms import *
 from app.jwt import *
 
 
-###
-# Routing for your application.
-###
+# Used to validate dates
+r = re.compile('(0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[- /.](19|20)\d\d')
+
 
 """              API: AUTHENTICATION & SEARCH              """
 
@@ -137,29 +137,63 @@ def getUser(user_id):
 """              API: Events              """
 
 @app.route('/api/events', methods = ['GET'])
-@requires_auth
-def getAllEvent():
+def get_all_events():
+    """
+        Get all events that match the filters for start and end date and title if they exist.
+    """
     if request.method == 'GET':
-        event = db.session.query(Event).all()
-        print(event)
+        start = request.args.get('start_date')
+        if start is None:
+            start = ''
+        end = request.args.get('end_date')
+        if end is None:
+            end = ''
+        title = request.args.get('title')
+        if start == '' and end == '' and title is None:
+            events = db.session.query(Event).all()
+            print(1)
+        elif r.match(start) is not None and r.match(end) is not None and title is not None:
+            start = datetime.strptime(start, '%d-%m-%Y')
+            end = datetime.strptime(end, '%d-%m-%Y')
+            events = Event.query.filter(Event.end_date>=end).filter(Event.start_date>=start).filter_by(title=title).all()
+            print(2)
+        elif r.match(start) is not None and r.match(end) is not None and title is None:
+            start = datetime.strptime(start, '%d-%m-%Y')
+            end = datetime.strptime(end, '%d-%m-%Y')
+            events = Event.query.filter(Event.end_date <= end).filter(Event.start_date >= start).all()
+            print(3)
+        elif r.match(start) is not None and r.match(end) is None and title is None:
+            start = datetime.strptime(start, '%d-%m-%Y')
+            events = Event.query.filter(Event.start_date >= start).all()
+            print(4)
+        elif r.match(start) is None and r.match(end) is not None and title is None:
+            end = datetime.strptime(end, '%d-%m-%Y')
+            events = Event.query.filter(Event.end_date <= end).all()
+            print(5)
+        elif r.match(start) is None and r.match(end) is None and title is not None:
+            events = Event.query.filter_by(title=title).all()
+            print(6)
+        elif r.match(start) is None and r.match(end) is None and title is None:
+            return jsonify({"message": "Invalid query parameters, Dates should be formatted as dd-mm-yyyy"}), 400
+        else:
+            return jsonify({"message": "Invalid query parameters, Dates should be formatted as dd-mm-yyyy"}), 400
         result = []
-        if len(event) != 0:
-            for e in event:
-                id = e.id
-                title = e.title
-                description = e.description
-                start_date = e.start_date
-                end_date = e.end_date
-                venue = e.venue
-                website_url = e.website_url
-                status = e.status
-                image = e.image
-                uid = e.uid
-                cresult = {'id': id, "description": description, "title": title, "start_date": start_date, "end_date": end_date, "venue": venue, "website_url": website_url, "status": status, "image": image, "uid": uid}
-                result.append(cresult)
+        if len(events) != 0:
+            for event in events:
+                eid = event.id
+                title = event.title
+                description = event.description
+                start_date = event.start_date
+                end_date = event.end_date
+                venue = event.venue
+                website_url = event.website_url
+                status = event.status
+                image = event.image
+                uid = event.uid
+                event = {'id': eid, "description": description, "title": title, "start_date": start_date, "end_date": end_date, "venue": venue, "website_url": website_url, "status": status, "image": image, "uid": uid}
+                result.append(event)
             return jsonify({'result': result}), 200
-        elif len(event) == 0: 
-            return jsonify({"result": event}), 404
+        return jsonify({"message": "No events found."}), 404
 
 @app.route('/api/events', methods = ['POST'])
 # @requires_auth
@@ -226,26 +260,130 @@ def addEvents():
         return jsonify({'event': []}), 400
 
 
-@app.route('/api/events/<id>', methods = ['GET'])
-# @requires_auth
-def getevent(id):
-    event = Event.query.filter_by(id = id).all()  # .all() is used on the BaseQuery to return an array for the results, allowing us to evaluate if we got no reult
-
-    if len(event) !=0:
-        for e in event:
-            eid = e.id
-            description = e.description
-            start_date = e.start_date
-            end_date = e.end_date
-            title = e.title
-            venue = e.venue
-            website_url = e.website_url
-            status = e.status
-            image = e.image
-            uid = e.uid
+@app.route('/api/events/<event_id>', methods = ['GET'])
+@requires_auth
+def getevent(event_id):
+    event = Event.query.filter_by(id=event_id).first()
+     # .all() is used on the BaseQuery to return an array for the results,
+     # allowing us to evaluate if we got no reult
+    if event is not None:
+        eid = event.id
+        description = event.description
+        start_date = event.start_date
+        end_date = event.end_date
+        title = event.title
+        venue = event.venue
+        website_url = event.website_url
+        status = event.status
+        image = event.image
+        uid = event.uid
 
         return jsonify({'id': eid, "description": description, "start_date": start_date, "end_date": end_date, "title": title, "venue": venue, "website_url": website_url, "status": status, "image": image, "uid": uid}), 200
-    elif len(event) == 0: 
-        return jsonify({"result": event}), 404
-    # else:
-    #     return jsonify({'result': "Access token is missing or invalid"}), 401
+    elif event is None:
+        return jsonify({"message": "No event found."}), 404  
+
+
+@app.route('/api/events/<event_id>', methods = ['PUT'])
+@requires_auth
+def updateEvent(eventid):
+    data= request.form
+    
+    event= Event.query.filter_by(id=eventid).first()
+    schedule = Schedule.filter_by(eventId=eventid).first()
+    groupid=schedule.groupId
+    group = Group.query.filter_by(id=groupid)
+    if sub == group.admin:
+        event.status = 'Published'
+        return jsonify({'id': event.id, 'status': event.status})
+    else:
+        return jsonify({'result': 'Not allowed'}), 400
+
+        
+
+"""              API: Group              """
+@app.route('/api/groups/<groupId>,<email>', methods = ['POST'])
+@requires_auth
+def addMember(groupId, email):
+    # ! should i get the email from a for field or should it just be passed in?
+    # Check if the logged in user is the admin of the group they want to add the user to 
+    isAdmin = db.session.query(db.exists().where(Group.id == groupId, Group.admin==sub)).scalar()
+    # Check if the member exists    
+    memberExists = db.session.query(db.exists().where(User.email==email)).scalar()
+    
+    if isAdmin == True: 
+        if memberExists==True:
+            member = User.query.filter_by(email=email).first()
+            # Check if the member already exist in the affiliate table
+            if Affiliate.query.filter_by(userId=member.id):
+                return jsonify({'message': 'User already a member'}), 409
+            else:
+                # Update the affiliation table with the new member 
+                affiliate=  Affiliate(
+                    userId= member.id,
+                    groupId=groupId
+                )
+
+                # Add member to Affiliation in db
+                db.session.add(affiliate)
+                db.session.commit()
+
+                # get the new member just added
+                newMember = Affiliate.query.filter_by(userId=member.id).first()
+
+                # build jsonify response
+                return jsonify({'userId': newMember.userId, 'groupId': newMember.groupId}), 201
+        else:
+            return jsonify({'message': 'Member with email address ' + email + ' does not exist'}), 400
+    else:
+        return jsonify({'message': 'Must be logged into an active session and be admin of group'}), 400
+
+
+# @app.route('/api/groups/<groupId>,<eventId>', methods = ['POST'])
+# @requires_auth
+def attachEventToGroup(groupId, eventId):
+    # Check if event, group mapping already exists in the schedule table
+    if Schedule.query.filter_by(eventId=eventId, groupId=groupId):
+        return jsonify({'message': 'Event already attached to group'}), 409
+    else:
+        schedule=Schedule(
+            eventId=eventId,
+            groupId=groupId
+        )
+
+        # Add member to Affiliation in db
+        db.session.add(schedule)
+        db.session.commit()
+
+        # get the new member just added
+        neweventgroup = Schedule.query.filter_by(eventId=eventId, groupId=groupId).first()
+
+        # build jsonify response
+        return jsonify({'eventId': neweventgroup.eventId, 'groupId': neweventgroup.groupId}), 201
+
+@app.route('/api/groups', methods = ['POST'])
+@requires_auth
+def createGroup():    
+    if request.form:
+        groupName= request.form['name']
+        # check if the group already exists with that name
+        if Group.query.filter_by(name=groupName).first():
+            return jsonify({'Error': 'Group already exists with that name'}), 409
+        else:
+            # create Group
+            group = Group(
+                name= request.form['name'],
+                admin=sub
+            )
+            
+            # Add member to Affiliation in db
+            db.session.add(group)
+            db.session.commit()
+
+            # get the new member just added
+            newgroup = Group.query.filter_by(name=groupName).first()
+
+            # build jsonify response
+            return jsonify({'id': newgroup.id, 'name': newgroup.name, 'admin': newgroup.admin}), 201
+
+    else:
+            return jsonify({'Group': []}), 400

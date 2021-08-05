@@ -12,11 +12,27 @@
 
     <!-- Bootstrap -->
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-
+    <link rel="stylesheet" href="{{url_for('static', filename="css/navbar.css")}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/404.css')}}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
     {% block css %} {% endblock%}
   </head>
   <body>
+    <header>
+        <div class="container">
+            <img src="{{url_for('static', filename='images/logo.png')}}" class="logo" alt="">
+        </div>
+
+        <nav>
+            <ul>
+                <li><a href="#">login</a></li>
+                <li><a href="#">logout</a></li>
+                <li><a href="#">Events</a></li>
+                <li><a href="#">sign up</a></li>
+                
+            </ul>
+        </nav>
+    </header>
     <div id="main">
         {% block main %}{% endblock %}
     </div>

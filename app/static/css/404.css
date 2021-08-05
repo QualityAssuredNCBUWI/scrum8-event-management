@@ -1,0 +1,70 @@
+body {
+    background: #222;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh ;
+    flex-direction:column
+}
+
+.glitch {
+    font-size: 6rem;
+    font-weight: 700;
+    margin-bottom: 0px;
+    text-shadow:
+    0.05em 0 0 red,
+    -0.025em -0.05em 0 green,
+    0.025em 0.05em 0 blue;
+    animation: glitch 750ms infinite;
+}
+
+small{
+    color: white;
+}
+
+@keyframes glitch {
+    0%{
+        text-shadow:
+        0.05em 0 0 red,
+        -0.05em -0.025em 0 green,
+        -0.025em 0.05em 0 blue;
+    }
+    14%{
+        text-shadow:
+        0.05em 0 0 red,
+        -0.05em -0.025em 0 green,
+        -0.025em 0.05em 0 blue;
+    }
+    15%{
+        text-shadow:
+        -0.05em -0.025em 0 red,
+        0.025em 0.025em 0 green,
+        -0.05em 0.05em 0 blue;
+    }
+    49%{
+        text-shadow:
+        -0.05em -0.025em 0 red,
+        0.025em 0.025em 0 green,
+        -0.05em 0.05em 0 blue;
+    }
+    50%{
+        text-shadow:
+        0.025em 0.05em 0 red,
+        0.05em 0 0 green,
+        0 -0.05em 0 blue;
+    }
+    99%{
+        text-shadow:
+        0.025em 0.05em 0 red,
+        0.05em 0 0 green,
+        0 -0.05em 0 blue;
+    }
+    100%{
+        text-shadow:
+        -0.025em 0 0 red,
+        -0.025em -0.025em 0 green,
+        -0.025em -0.05em 0 blue;
+    }
+
+}

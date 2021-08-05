@@ -4,7 +4,9 @@ Jinja2 Documentation:    http://jinja.pocoo.org/2/documentation/
 Werkzeug Documentation:  http://werkzeug.pocoo.org/documentation/
 This file creates your application.
 """
-import os
+from operator import sub
+from flask.wrappers import Request
+import os, re
 from app import app, db, login_manager
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort, jsonify, g, make_response
 # from flask_login import login_user, logout_user, current_user, login_required
@@ -18,6 +20,16 @@ from app.jwt import *
 from app.api_endpoints import *
 
 
+
+###
+# Routing for your application.
+###
+
+
+      
+
+# FOR ADD EVENT
+#  the createGroup method requires the schedule endpoint aka attachEventToGroup
 
 # Please create all new routes and view functions above this route.
 # This route is now our catch all route for our VueJS single page
