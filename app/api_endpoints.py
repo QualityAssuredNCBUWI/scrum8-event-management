@@ -284,14 +284,15 @@ def getevent(event_id):
 
 
 
-@app.route('/api/events/<event_id>', methods = ['PUT'])
-@requires_auth
+@app.route('/api/events/<event_id>', methods = ['PUT']) #update user endpoint
+@requires_auth #ensure the user is logged in
 def updateEvent(event_id):
 
 
     # event= Event.query.filter_by(id=event_id).first()
-    schedule = Schedule.filter_by(eventId=event_id).first()
+    schedule = Schedule.query.filter_by(eventId=event_id).first()
     group = Group.query.filter_by(id=schedule.groupId)
+    # check if the current user it the admin for the group responsible for the event
     if g.current_user['sub'] == group.admin:
         # {title, start_date, end_date, description, venue, websiteurl, status}= request.form
         data = request.form
