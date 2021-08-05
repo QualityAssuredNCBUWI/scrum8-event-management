@@ -2,7 +2,7 @@ import os, re
 from app import app, db, login_manager
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort, jsonify, g, make_response
 # from flask_login import login_user, logout_user, current_user, login_required
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta, timezone
 from app.models import *
@@ -38,7 +38,7 @@ def register():
                 password = request.form['password'], 
                 email = request.form['email'],
                 profile_photo = filename,
-                created_at =  datetime.datetime.now(datetime.timezone.utc)
+                created_at =  datetime.now(timezone.utc)
             )
 
             #add user to db
@@ -83,7 +83,7 @@ def login():
             token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
 
             #send api response
-            return jsonify({'message': 'Login successful', 'token': token}), 200
+            return jsonify({'status': 'Login successful', 'token': token}), 200
         elif user is None or not check_password_hash(user.password, password):
             return jsonify({'message': 'Login unsuccessful'}), 404
         else:
@@ -97,7 +97,7 @@ def logout():
     db.session.commit()
     
     # logout_user()
-    return jsonify({'message': 'Log out successful'}), 200
+    return jsonify({'status': 'Log out successful'}), 200
 
 
 # user_loader callback. This callback is used to reload the user object from
@@ -111,26 +111,144 @@ def logout():
 """              API: PROFILE MANAGEMENT              """
 
 @app.route('/api/users/<user_id>', methods = ['GET'])
-# @requires_auth
+@requires_auth
 def getUser(user_id):
-    user = User.query.filter_by(id = user_id).all()
-    if len(user) !=0:
-        for u in user:
-            uid = u.id
-            first_name = u.first_name
-            last_name = u.last_name
-            email = u.email
-            photo = u.profile_photo
-            created_at = u.created_at
+    try:
+        if (not isinstance(user_id, int) and not user_id.isnumeric()): 
+            return jsonify({"Status":"Invalid user ID"}),406
 
-        # result = {'id': uid, "username": username, "password": password, "name": name, "email": email, "location": location, "biography": biography, "photo": photo, "date_joined": date_joined}
-        # return jsonify({'result':result}), 200
-        return jsonify({'id': uid, "first_name": first_name, "last_name": last_name, "email": email, "photo": photo, "created_at": created_at}), 200
-    elif len(user) == 0: 
-        return jsonify({"result": user}), 404
-    # else:
-    #     # idealy need to figure out how to check the user is authenticated and token valid for a 401
-    #     return jsonify({'result': "Access token is missing or invalid"}), 401
+        user = User.query.get(user_id)
+        if(user is None): 
+            return jsonify({"status":"user is unavailable"}),404
+        
+        user_response = {
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "profile_photo": user.profile_photo,
+            "created_at": user.created_at
+        }
+
+        return jsonify({
+            "status": "user found",
+            "user": user_response
+        }), 200
+    except:
+        pass
+    return jsonify({"status":"An error occured"}),400
+
+@app.route('/api/users/current', methods = ['GET'])
+@requires_auth
+def getCurrentUser():
+    try:
+        user_id = g.current_user['sub']
+        if (not isinstance(user_id, int) and not user_id.isnumeric()): 
+            return jsonify({"Status":"Invalid user ID"}),406
+
+        user = User.query.get(user_id)
+        if(user is None): 
+            return jsonify({"status":"user is unavailable"}),404
+        
+        user_response = {
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "profile_photo": user.profile_photo,
+            "created_at": user.created_at
+        }
+
+        return jsonify({
+            "status": "user found",
+            "user": user_response
+        }), 200
+    except:
+        pass
+    return jsonify({"status":"An error occured"}),400
+
+
+@app.route('/api/users/current', methods = ['PUT'])
+@requires_auth
+def updateCurrentUser():
+    # try:
+        if request.form:
+            error_found = False
+            errors = []
+
+            user_id = g.current_user['sub']
+            if (not isinstance(user_id, int) and not user_id.isnumeric()): 
+                return jsonify({"Status":"Invalid user ID"}),406
+
+            user = User.query.get(user_id)
+            if(user is None): 
+                return jsonify({"status":"user is unavailable"}),404
+            
+            # update each user field if its available
+            if('photo' in request.files):
+                rawPhoto = request.files['photo']
+                filename = secure_filename(rawPhoto.filename)
+                rawPhoto.save(os.path.join(
+                    app.config['PROFILE_UPLOAD_FOLDER'], filename
+                ))
+                user.profile_photo = filename
+            
+            # update firstname
+            if('firstname' in request.form):
+                user.first_name = request.form['firstname']
+            
+            # update lastname
+            if('lastname' in request.form):
+                user.last_name = request.form['lastname']
+            
+            # update email
+            if('email' in request.form):
+                if('confirm_email' in request.form):
+                    if(request.form['email'] == request.form['confirm_email']):
+                        user.email = request.form['email']
+                    else:
+                        error_found = True
+                        errors.append("The emails are different")
+                else:
+                    error_found = True
+                    errors.append("The ( confirm_email ) field is required")
+            
+            # update password
+            if('password' in request.form):
+                if('confirm_password' in request.form):
+                    if(request.form['password'] == request.form['confirm_password']):
+                        user.password = generate_password_hash(request.form['password'], method='pbkdf2:sha256') 
+                    else:
+                        error_found = True
+                        errors.append("The passwords are different")
+                else:
+                    error_found = True
+                    errors.append("The ( confirm_password ) field is required")
+            
+            if(error_found):
+                return jsonify({
+                    "status": "Incorrect or missing fields",
+                    "errors": errors
+                }), 406
+
+            db.session.commit()
+
+            user_response = {
+                "id": user.id,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email,
+                "profile_photo": user.profile_photo,
+                "created_at": user.created_at
+            }
+
+            return jsonify({
+                "status": "user updated",
+                "user": user_response
+            }), 200
+    # except:
+    #     pass
+    # return jsonify({"status":"An error occured"}),400
 
 
 
@@ -196,68 +314,85 @@ def get_all_events():
         return jsonify({"message": "No events found."}), 404
 
 @app.route('/api/events', methods = ['POST'])
-# @requires_auth
+@requires_auth
 def addEvents():
-    if request.form:
-        # get photo filename
-        rawEventPhoto = request.files['image']
-        eventFilename = secure_filename(rawEventPhoto.filename)
-        rawEventPhoto.save(os.path.join(
-            app.config['EVENT_UPLOAD_FOLDER'], eventFilename
-        ))
-        
-        eventPhotoPath = "../../../eventUploads/" + eventFilename
+    try:
+        if request.form:
+            # check if the group exist 
+            if( Group.query.get(request.form["group_id"]) is None): 
+                return jsonify({"status":"group not found"}), 404
+            
+            #check if the user is in group
+            if(Affiliate.query.filter_by(userId=g.current_user['sub'], groupId=request.form["group_id"]).first() is None):
+                return jsonify({"status": "User is not in group"}), 403 
+            
+            # get photo filename
+            rawEventPhoto = request.files['image']
+            eventFilename = secure_filename(rawEventPhoto.filename)
+            rawEventPhoto.save(os.path.join(
+                app.config['EVENT_UPLOAD_FOLDER'], eventFilename
+            ))
+            
+            # check if event already exists in database 
+            # for a user to add a event, it must have at least one attribute that differs from all other events
+            event = None
+            if Event.query.filter_by(description = request.form['description']).first() \
+                and Event.query.filter_by(start_date = datetime.strptime(request.form['start_date'], "%Y-%m-%d %H:%M:%S %z")).first() \
+                and Event.query.filter_by(end_date = datetime.strptime(request.form['end_date'], "%Y-%m-%d %H:%M:%S %z")).first() \
+                and Event.query.filter_by(title = request.form['title']).first() \
+                and Event.query.filter_by(venue = request.form['venue']).first() \
+                and Event.query.filter_by(website_url = request.form['website_url']).first() \
+                and Event.query.filter_by(uid = g.current_user['sub']).first() \
+                and Event.query.filter_by(image = eventFilename).first():
+                    return jsonify({'message': 'Event already exists.'}), 409
+            else:
+                event = Event(
+                    title = request.form['title'],
+                    description = request.form['description'],
+                    start_date = datetime.strptime(request.form['start_date'], "%Y-%m-%d %H:%M:%S %z"),
+                    end_date = datetime.strptime(request.form['end_date'], "%Y-%m-%d %H:%M:%S %z"),
+                    venue = request.form['venue'],
+                    website_url = request.form['website_url'],
+                    status = "pending",
+                    image = eventFilename,
+                    uid = g.current_user['sub'],
+                    created_at= datetime.now(timezone.utc)
+                )
 
-        # check if event already exists in database 
-        # for a user to add a event, it must have at least one attribute that differs from all other events
-        if Event.query.filter_by(description = request.form['description']).first() \
-            and Event.query.filter_by(start_date = request.form['start_date']).first() \
-            and Event.query.filter_by(end_date = request.form['end_date']).first() \
-            and Event.query.filter_by(title = request.form['title']).first() \
-            and Event.query.filter_by(venue = request.form['venue']).first() \
-            and Event.query.filter_by(website_url = request.form['website_url']).first() \
-            and Event.query.filter_by(status = request.form['status']).first() \
-            and Event.query.filter_by(uid = request.form['uid']).first() \
-            and Event.query.filter_by(image = eventPhotoPath).first():
-                return jsonify({'message': 'Event already exists.'}), 409
-        else:
-            event = Event(
-                description = request.form['description'],
-                start_date = request.form['start_date'],
-                end_date = request.form['end_date'],
-                title = request.form['title'],
-                venue = request.form['venue'],
-                website_url = request.form['website_url'],
-                status = request.form['status'],
-                image = eventPhotoPath,
-                uid = request.form['uid']
-            )
+                #add event to db
+                db.session.add(event)
+                db.session.commit()
 
-            #add event to db
-            db.session.add(event)
-            db.session.commit()
+                schedule = Schedule(event.id, request.form["group_id"])
+                db.session.add(schedule)
+                db.session.commit()
 
-            #get the event from the db (using description, user_id and photo to identify)
-            newEvent = Event.query.filter_by(description = request.form['description']) \
-                                .filter_by(uid = request.form['uid']) \
-                                .filter_by(image = eventPhotoPath) \
-                                .first()
+                submit = Submit(event.id, g.current_user['sub'])
+                db.session.add(submit)
+                db.session.commit()
 
-            #send api response
-            # return jsonify({'event': eventResult}), 201
-            return jsonify({'id': newEvent.id, 
-                            'description': newEvent.description,  \
-                            'start_date': newEvent.start_date,    \
-                            'end_date': newEvent.end_date,    \
-                            'title': newEvent.title,  \
-                            'venue': newEvent.venue,    \
-                            'website_url': newEvent.website_url,    \
-                            'status': newEvent.status,    \
-                            'image': newEvent.image,  \
-                            'uid': newEvent.uid}), 201
-    else:
-    #    abort(400) #bad request http code
-        return jsonify({'event': []}), 400
+                event_response = {
+                    'id': event.id, 
+                    'description': event.description,  'start_date': event.start_date,   
+                    'end_date': event.end_date, 
+                    'title': event.title,
+                    'venue': event.venue,  
+                    'website_url': event.website_url,
+                    'status': event.status, 
+                    'image': event.image,  
+                    'user_id': event.uid
+                }
+
+                #send api response
+                # return jsonify({'event': eventResult}), 201
+                return jsonify({
+                    "status":"event added",
+                    "group_id": request.form["group_id"],
+                    "event": event_response
+                    }), 201
+    except:
+        pass
+    return jsonify({"status":"An error occured", 'event': []}), 400
 
 
 @app.route('/api/events/<event_id>', methods = ['GET'])
@@ -281,7 +416,6 @@ def getevent(event_id):
         return jsonify({'id': eid, "description": description, "start_date": start_date, "end_date": end_date, "title": title, "venue": venue, "website_url": website_url, "status": status, "image": image, "uid": uid}), 200
     elif event is None:
         return jsonify({"message": "No event found."}), 404  
-
 
 
 @app.route('/api/events/<event_id>', methods = ['PUT']) #update user endpoint
@@ -309,11 +443,11 @@ def updateEvent(event_id):
     else:
         return jsonify({'result': 'Not allowed'}), 400
 
-@app.route('/api/events/<event_id>', method= ['DELETE']) 
+@app.route('/api/events/<event_id>', methods= ['DELETE']) 
 @requires_auth
 def removeEvent(event_id):
     schedule = Schedule.filter_by(eventId=event_id).first()
-    group = Group.query.filter_by(id=schedule.groupId)
+    group = Group.query.filter_by(id=schedule.groupId).first()
     if g.current_user['sub'] == group.admin:
         event = Event.query.filter_by(id=event_id).first()
 
@@ -325,6 +459,46 @@ def removeEvent(event_id):
             return "There was an issue"
     else:
         return jsonify({'result': 'Not allowed'}), 400        
+
+
+@app.route('/api/events/groups/<group_id>', methods= ['GET'])
+def getEventsInGroup(group_id): 
+    try:
+        if (not isinstance(group_id, int) and not group_id.isnumeric()): abort(400)
+
+        if ( Group.query.get(group_id) == None): 
+            return jsonify({"status":"Group unavailable"}),404
+        
+        # get the evnts if the group exist
+        schedules = Schedule.query.filter_by(groupId = group_id).all()
+
+        events = []
+
+        for schedule in schedules:
+            event = Event.query.get(schedule.eventId)
+            if(event.status == "pending"):
+                events.append({
+                    'id': event.id,
+                    'title': event.title,
+                    'start_date': event.start_date,
+                    'end_date': event.end_date,
+                    'description': event.description,
+                    'venue': event.venue,
+                    'image': event.image,
+                    'website_url': event.website_url,
+                    'status': event.status,
+                    'user_id': event.uid,
+                    'created_date': event.created_at
+                })
+
+        return jsonify({"status": "events", "group": group_id, "events":events})
+    except:
+        pass
+
+    return jsonify({"status":"an error occured"})
+    
+
+
 
 """              API: Group              """
 @app.route('/api/groups/<groupId>,<email>', methods = ['POST'])
