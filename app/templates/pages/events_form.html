@@ -6,7 +6,7 @@
     <h3 class="font-weight-bold display-3">
       Create New Event
     </h3>
-    <form action="" method="post">
+    <form action="{{url_for('addEvents')}}" method="POST">
         {{ form.csrf_token }}
         <div class= "form-group col w-50 mb-2">
             {{ form.title.label}}
@@ -31,10 +31,6 @@
         <div class= "form-group col w-50 mb-2">
             {{ form.websiteurl.label}}
             {{ form.websiteurl(class='form-control') }}
-        </div>
-        <div class= "form-group col w-50 mb-2">
-            {{ form.status.label}}
-            {{ form.status(class='form-control') }}
         </div>
         <div class= "form-group col w-50 mb-2">
             {{ form.group.label}}
