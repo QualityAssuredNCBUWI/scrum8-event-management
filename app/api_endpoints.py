@@ -369,23 +369,23 @@ def updateEvent(event_id):
 @app.route('/api/events/<event_id>', methods = ['DELETE']) 
 @requires_auth
 def removeEvent(event_id):
-    schedule = Schedule.filter_by(eventId=event_id).first()
-    group = Group.query.filter_by(id=schedule.groupId)
+    schedule = Schedule.query.filter_by(eventId=event_id).first()
+    group = Group.query.filter_by(id=schedule.groupId).first()
     if g.current_user['sub'] == group.admin:
         event = Event.query.filter_by(id=event_id).first()
         schedule = Schedule.query.filter_by(eventId=event_id).first()
-        submit = Submit.query.filter.filter_by(eventId=event_id).first()
+        submit = Submit.query.filter_by(eventId=event_id).first()
 
-        try:
-            db.session.delete(event)
-            db.session.delete(schedule)
-            db.session.delete(submit)
-            if( Event.query.filter_by(id=event_id).first() is not None or Schedule.query.filter_by(eventId=event_id).first() is not None or Submit.query.filter.filter_by(eventId=event_id).first() is not None):
-               return ({'result': 'Unable to delete event'}), 400  
-            else:
-                db.session.commit()
-        except:
-            return "There was an issue"
+        
+        db.session.delete(schedule)
+        db.session.delete(submit)
+        db.session.delete(event)
+       
+        db.session.commit()
+        if( Event.query.filter_by(id=event_id).first() is not None or Schedule.query.filter_by(eventId=event_id).first() is not None or Submit.query.filter.filter_by(eventId=event_id).first() is not None):
+            return ({'result': 'Unable to delete event'}), 400  
+        # except:
+        #     return jsonify({'message': 'There was an issue'}), 500
     else:
         return jsonify({'result': 'Not allowed'}), 400        
 

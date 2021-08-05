@@ -118,8 +118,8 @@ class Affiliate(db.Model):
 class Schedule(db.Model):
     __tablename__ = 'Schedule'
 
-    eventId = db.Column(db.Integer,  db.ForeignKey('Event.id'), nullable=False, primary_key=True)
-    groupId = db.Column(db.Integer, db.ForeignKey('Group.id'), nullable=False, primary_key=True)
+    eventId = db.Column(db.Integer,  db.ForeignKey('Event.id', ondelete='CASCADE'), nullable=False, primary_key=True)
+    groupId = db.Column(db.Integer, db.ForeignKey('Group.id', ondelete='CASCADE'), nullable=False, primary_key=True)
     
     def __init__(self, eventId, groupId):
         self.eventId = eventId
@@ -133,8 +133,8 @@ class Schedule(db.Model):
 class Submit(db.Model):
     __tablename__ = 'Submit'
 
-    eventId = db.Column(db.Integer, db.ForeignKey('Event.id'),  nullable=False, primary_key=True)
-    userId = db.Column(db.Integer, db.ForeignKey('User.id'),  nullable=False, primary_key=True)
+    eventId = db.Column(db.Integer, db.ForeignKey('Event.id', ondelete='CASCADE'),  nullable=False, primary_key=True)
+    userId = db.Column(db.Integer, db.ForeignKey('User.id', ondelete='CASCADE'),  nullable=False, primary_key=True)
     
     def __init__(self, eventId, userId):
         self.eventId = eventId
