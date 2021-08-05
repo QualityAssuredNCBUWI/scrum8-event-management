@@ -21,7 +21,7 @@ r = re.compile('(0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[- /.](19|20)\d\d')
 def register(): 
     if request.form : #TBD:update to check for essentials
         # get photo filename
-        rawPhoto = request.files['photo']
+        rawPhoto = request.files['profile_photo']
         filename = secure_filename(rawPhoto.filename)
         rawPhoto.save(os.path.join(
             app.config['PROFILE_UPLOAD_FOLDER'], filename
@@ -33,8 +33,8 @@ def register():
         else:
             # create user 
             user = User(
-                first_name=request.form['firstname'],
-                last_name=request.form['lastname'],
+                first_name=request.form['first_name'],
+                last_name=request.form['last_name'],
                 password = request.form['password'], 
                 email = request.form['email'],
                 profile_photo = filename,
@@ -409,7 +409,7 @@ def addEvents():
                 return jsonify({"message": "User is not in group"}), 403 
             
             # get photo filename
-            rawEventPhoto = request.files['image']
+            rawEventPhoto = request.files['images']
             eventFilename = secure_filename(rawEventPhoto.filename)
             rawEventPhoto.save(os.path.join(
                 app.config['EVENT_UPLOAD_FOLDER'], eventFilename
@@ -423,7 +423,7 @@ def addEvents():
                 and Event.query.filter_by(end_date = datetime.strptime(request.form['end_date'], "%Y-%m-%d %H:%M:%S %z")).first() \
                 and Event.query.filter_by(title = request.form['title']).first() \
                 and Event.query.filter_by(venue = request.form['venue']).first() \
-                and Event.query.filter_by(website_url = request.form['website_url']).first() \
+                and Event.query.filter_by(website_url = request.form['websiteurl']).first() \
                 and Event.query.filter_by(uid = g.current_user['sub']).first() \
                 and Event.query.filter_by(image = eventFilename).first():
                     return jsonify({'message': 'Event already exists.'}), 409
@@ -434,7 +434,7 @@ def addEvents():
                     start_date = datetime.strptime(request.form['start_date'], "%Y-%m-%d %H:%M:%S %z"),
                     end_date = datetime.strptime(request.form['end_date'], "%Y-%m-%d %H:%M:%S %z"),
                     venue = request.form['venue'],
-                    website_url = request.form['website_url'],
+                    website_url = request.form['websiteurl'],
                     status = "pending",
                     image = eventFilename,
                     uid = g.current_user['sub'],
@@ -527,24 +527,39 @@ def updateEvent(event_id):
 @requires_auth
 def removeEvent(event_id):
     schedule = Schedule.query.filter_by(eventId=event_id).first()
-    group = Group.query.filter_by(id=schedule.groupId).first()
-    if g.current_user['sub'] == group.admin:
-        event = Event.query.filter_by(id=event_id).first()
-        schedule = Schedule.query.filter_by(eventId=event_id).first()
-        submit = Submit.query.filter_by(eventId=event_id).first()
+    if schedule is not None:
+        group = Group.query.filter_by(id=schedule.groupId).first()
+        if group is not None:
+            if g.current_user['sub'] == group.admin:
+                event = Event.query.filter_by(id=event_id).first()
+                schedule = Schedule.query.filter_by(eventId=event_id).first()
+                submit = Submit.query.filter_by(eventId=event_id).first()
 
-        
-        db.session.delete(schedule)
-        db.session.delete(submit)
-        db.session.delete(event)
-       
-        db.session.commit()
-        if( Event.query.filter_by(id=event_id).first() is not None or Schedule.query.filter_by(eventId=event_id).first() is not None or Submit.query.filter.filter_by(eventId=event_id).first() is not None):
-            return ({'message': 'Unable to delete event'}), 400  
-        # except:
-        #     return jsonify({'message': 'There was an issue'}), 500
+                eid = event.id
+                description = event.description
+                start_date = event.start_date
+                end_date = event.end_date
+                title = event.title
+                venue = event.venue
+                website_url = event.website_url
+                status = event.status
+                image = event.image
+                uid = event.uid
+
+                db.session.delete(schedule)
+                db.session.delete(submit)
+                db.session.delete(event)
+            
+                db.session.commit()
+                if( Event.query.filter_by(id=event_id).first() is not None or Schedule.query.filter_by(eventId=event_id).first() is not None or Submit.query.filter_by(eventId=event_id).first() is not None):
+                    return ({'result': 'Unable to delete event'}), 400  
+                else:
+                    return jsonify({'message': 'Event deleted.', 'result':{'id': eid, "description": description, "start_date": start_date, "end_date": end_date, "title": title, "venue": venue, "website_url": website_url, "status": status, "image": image, "uid": uid}}), 200
+            else:
+                return jsonify({'result': 'You are not the admin for this group.'}), 401
+            return jsonify({"message": 'Event not found'}), 404  
     else:
-        return jsonify({'message': 'Not allowed'}), 400        
+        return jsonify({"message": 'Event not found'}), 404   
 
 @app.route('/api/events/groups/<group_id>/pending', methods = ['GET']) #update user endpoint
 @requires_auth #ensure the user is logged in
