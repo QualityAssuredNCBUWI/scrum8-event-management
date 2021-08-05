@@ -12,7 +12,7 @@ class SignUpForm(FlaskForm):
     first_name = StringField('First Name', validators=[InputRequired()])
     last_name = StringField('Last Name', validators=[InputRequired()])
     email = StringField('Email', validators=[InputRequired()])
-    password = PasswordField('password', validators=[InputRequired(), EqualTo('confirm',message='Must be the same as previous')])
+    password = PasswordField('Password', validators=[InputRequired(), EqualTo('confirm',message='Must be the same as previous')])
     confirm = PasswordField('Repeat Password')
     profile_photo = FileField('Profile Photo', validators=[InputRequired()])
 
