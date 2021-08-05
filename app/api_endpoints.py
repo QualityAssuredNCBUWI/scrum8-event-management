@@ -339,7 +339,22 @@ def updateEvent(event_id):
     else:
         return jsonify({'result': 'Not allowed'}), 400
 
-        
+@app.route('/api/events/<event_id>', method= ['DELETE']) 
+@requires_auth
+def removeEvent(event_id):
+    schedule = Schedule.filter_by(eventId=event_id).first()
+    group = Group.query.filter_by(id=schedule.groupId)
+    if g.current_user['sub'] == group.admin:
+        event = Event.query.filter_by(id=event_id).first()
+
+        try:
+            db.session.delete(event)
+            db.session.commit()
+
+        except:
+            return "There was an issue"
+    else:
+        return jsonify({'result': 'Not allowed'}), 400        
 
 """              API: Group              """
 @app.route('/api/groups/<groupId>,<email>', methods = ['POST'])
