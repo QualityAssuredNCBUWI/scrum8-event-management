@@ -290,7 +290,7 @@ def updateEvent(event_id):
 
 
     # event= Event.query.filter_by(id=event_id).first()
-    schedule = Schedule.filter_by(eventId=event_id).first()
+    schedule = Schedule.query.filter_by(eventId=event_id).first()
     group = Group.query.filter_by(id=schedule.groupId)
     if g.current_user['sub'] == group.admin:
         # {title, start_date, end_date, description, venue, websiteurl, status}= request.form
