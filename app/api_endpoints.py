@@ -339,18 +339,24 @@ def updateEvent(event_id):
     else:
         return jsonify({'result': 'Not allowed'}), 400
 
-@app.route('/api/events/<event_id>', method= ['DELETE']) 
+@app.route('/api/events/<event_id>', methods = ['DELETE']) 
 @requires_auth
 def removeEvent(event_id):
     schedule = Schedule.filter_by(eventId=event_id).first()
     group = Group.query.filter_by(id=schedule.groupId)
     if g.current_user['sub'] == group.admin:
         event = Event.query.filter_by(id=event_id).first()
+        schedule = Schedule.query.filter_by(eventId=event_id).first()
+        submit = Submit.query.filter.filter_by(eventId=event_id).first()
 
         try:
             db.session.delete(event)
-            db.session.commit()
-
+            db.session.delete(schedule)
+            db.session.delete(submit)
+            if( Event.query.filter_by(id=event_id).first() is not None or Schedule.query.filter_by(eventId=event_id).first() is not None or Submit.query.filter.filter_by(eventId=event_id).first() is not None):
+               return ({'result': 'Unable to delete event'}), 400  
+            else:
+                db.session.commit()
         except:
             return "There was an issue"
     else:
