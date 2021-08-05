@@ -28,27 +28,26 @@
 <script>
     $( window ).ready(function() {
         $("#loginform").submit(function(event){
+            event.preventDefault();  //prevent form from submitting
+            let data = $("#loginform :input").serializeArray();
 
-        });
+            post_data = { "email": data[1].value, "password": data[2].value }
 
-        $.get("http://127.0.0.1:8079/api/events", function(data, status){
-            let events = data.result;
-            console.log(events[0])
+            $.ajax({
+                url: 'http://127.0.0.1:8079/api/auth/login',
+                type: 'POST',
+                data: JSON.stringify(post_data),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                async: false,
+                success: function(result) {
+                    document.cookie = "token="+JSON.stringify(result.token);
+                    alert("Login Succesful")
+
+                }
+            });
+
             
-            let event_cards = ""
-            for (const event of events){
-                let card = `
-                    <div class="event-card">
-                       <h4>Name: ${event.title}</h4> 
-                       <p>Description: ${event.description}</p>
-                       <p>Venue:  ${event.venue}</p>
-                    </div>
-                `
-
-                event_cards += card
-            }
-            $("#events-list").html(event_cards);
-
 
         });
 
