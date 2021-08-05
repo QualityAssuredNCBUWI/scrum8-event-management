@@ -22,3 +22,6 @@ class CreateEvent(FlaskForm):
     venue = StringField('Venue', validators=[InputRequired()])
     websiteurl = StringField('Web Site URL', [Optional()])
     status = SelectField('Event Status',choices=[('Pending','Pending'),('Published','Published')],validators=[InputRequired()])
+
+class CreateGroup(FlaskForm):
+    name = StringField('Name', validators=[InputRequired()])
