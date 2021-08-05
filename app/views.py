@@ -4,11 +4,12 @@ Jinja2 Documentation:    http://jinja.pocoo.org/2/documentation/
 Werkzeug Documentation:  http://werkzeug.pocoo.org/documentation/
 This file creates your application.
 """
+from operator import sub
 import os
 from app import app, db, login_manager
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort, jsonify, g, make_response
 from flask_login import login_user, logout_user, current_user, login_required
-from app.models import User, Event, Affiliate, Schedule, Submit
+from app.models import User, Event, Affiliate, Schedule, Submit, Group
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 #from datetime import datetime, timezone
@@ -319,8 +320,96 @@ def getevent(id):
     #     return jsonify({'result': "Access token is missing or invalid"}), 401
         
 
+"""              API: Group              """
+@app.route('/api/groups/<groupId>,<email>', methods = ['POST'])
+@requires_auth
+def addMember(groupId, email):
+    # ! should i get the email from a for field or should it just be passed in?
+    # Check if the logged in user is the admin of the group they want to add the user to 
+    isAdmin = db.session.query(db.exists().where(Group.id == groupId, Group.admin==sub)).scalar()
+    # Check if the member exists    
+    memberExists = db.session.query(db.exists().where(User.email==email)).scalar()
+    
+    if isAdmin == True: 
+        if memberExists==True:
+            member = User.query.filter_by(email=email).first()
+            # Check if the member already exist in the affiliate table
+            if Affiliate.query.filter_by(userId=member.id):
+                return jsonify({'message': 'User already a member'}), 409
+            else:
+                # Update the affiliation table with the new member 
+                affiliate=  Affiliate(
+                    userId= member.id,
+                    groupId=groupId
+                )
+
+                # Add member to Affiliation in db
+                db.session.add(affiliate)
+                db.session.commit()
+
+                # get the new member just added
+                newMember = Affiliate.query.filter_by(userId=member.id).first()
+
+                # build jsonify response
+                return jsonify({'userId': newMember.userId, 'groupId': newMember.groupId}), 201
+        else:
+            return jsonify({'message': 'Member with email address ' + email + ' does not exist'}), 400
+    else:
+        return jsonify({'message': 'Must be logged into an active session and be admin of group'}), 400
 
 
+# @app.route('/api/groups/<groupId>,<eventId>', methods = ['POST'])
+# @requires_auth
+def attachEventToGroup(groupId, eventId):
+    # Check if event, group mapping already exists in the schedule table
+    if Schedule.query.filter_by(eventId=eventId, groupId=groupId):
+        return jsonify({'message': 'Event already attached to group'}), 409
+    else:
+        schedule=Schedule(
+            eventId=eventId,
+            groupId=groupId
+        )
+
+        # Add member to Affiliation in db
+        db.session.add(schedule)
+        db.session.commit()
+
+        # get the new member just added
+        neweventgroup = Schedule.query.filter_by(eventId=eventId, groupId=groupId).first()
+
+        # build jsonify response
+        return jsonify({'eventId': neweventgroup.eventId, 'groupId': neweventgroup.groupId}), 201
+
+@app.route('/api/groups', methods = ['POST'])
+@requires_auth
+def createGroup():    
+    if request.form:
+        groupName= request.form['name']
+        # check if the group already exists with that name
+        if Group.query.filter_by(name=groupName).first():
+            return jsonify({'Error': 'Group already exists with that name'}), 409
+        else:
+            # create Group
+            group = Group(
+                name= request.form['name'],
+                admin=sub
+            )
+            
+            # Add member to Affiliation in db
+            db.session.add(group)
+            db.session.commit()
+
+            # get the new member just added
+            newgroup = Group.query.filter_by(name=groupName).first()
+
+            # build jsonify response
+            return jsonify({'id': newgroup.id, 'name': newgroup.name, 'admin': newgroup.admin}), 201
+
+    else:
+            return jsonify({'Group': []}), 400
+
+# FOR ADD EVENT
+#  the createGroup method requires the schedule endpoint aka attachEventToGroup
 
 # Please create all new routes and view functions above this route.
 # This route is now our catch all route for our VueJS single page
