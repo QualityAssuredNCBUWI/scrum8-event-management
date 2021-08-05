@@ -7,7 +7,7 @@ This file creates your application.
 from operator import sub
 from flask.wrappers import Request
 import os, re
-from app import app, db, login_manager
+from app import app, db
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort, jsonify, g, make_response
 # from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash

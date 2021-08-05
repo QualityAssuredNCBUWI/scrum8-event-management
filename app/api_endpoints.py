@@ -1,5 +1,5 @@
 import os, re
-from app import app, db, login_manager
+from app import app, db
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort, jsonify, g, make_response
 # from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash
@@ -195,69 +195,99 @@ def get_all_events():
             return jsonify({'result': result}), 200
         return jsonify({"message": "No events found."}), 404
 
-@app.route('/api/events', methods = ['POST'])
-# @requires_auth
-def addEvents():
-    if request.form:
-        # get photo filename
-        rawEventPhoto = request.files['image']
-        eventFilename = secure_filename(rawEventPhoto.filename)
-        rawEventPhoto.save(os.path.join(
-            app.config['EVENT_UPLOAD_FOLDER'], eventFilename
-        ))
-        
-        eventPhotoPath = "../../../eventUploads/" + eventFilename
+@app.route('/api/events/<groupId>', methods = ['POST'])
+@requires_auth
+def addEvents(groupId):
+    # check if member is part of group 
+    currentU = g.current_user['sub'] 
+    group = db.session.query(Affiliate).filter_by(userId=currentU, groupId=groupId).first()
+    if group is not None:
+        if request.form:
+            # get photo filename
+            rawEventPhoto = request.files['image']
+            eventFilename = secure_filename(rawEventPhoto.filename)
+            rawEventPhoto.save(os.path.join(
+                app.config['EVENT_UPLOAD_FOLDER'], eventFilename
+            ))
+            
+            eventPhotoPath = app.config['EVENT_UPLOAD_FOLDER'] + eventFilename
 
-        # check if event already exists in database 
-        # for a user to add a event, it must have at least one attribute that differs from all other events
-        if Event.query.filter_by(description = request.form['description']).first() \
-            and Event.query.filter_by(start_date = request.form['start_date']).first() \
-            and Event.query.filter_by(end_date = request.form['end_date']).first() \
-            and Event.query.filter_by(title = request.form['title']).first() \
-            and Event.query.filter_by(venue = request.form['venue']).first() \
-            and Event.query.filter_by(website_url = request.form['website_url']).first() \
-            and Event.query.filter_by(status = request.form['status']).first() \
-            and Event.query.filter_by(uid = request.form['uid']).first() \
-            and Event.query.filter_by(image = eventPhotoPath).first():
-                return jsonify({'message': 'Event already exists.'}), 409
+            # check if event already exists in database 
+            # for a user to add a event, it must have at least one attribute that differs from all other events
+            if Event.query.filter_by(description = request.form['description']).first() \
+                and Event.query.filter_by(start_date = request.form['start_date']).first() \
+                and Event.query.filter_by(end_date = request.form['end_date']).first() \
+                and Event.query.filter_by(title = request.form['title']).first() \
+                and Event.query.filter_by(venue = request.form['venue']).first() \
+                and Event.query.filter_by(website_url = request.form['website_url']).first() \
+                and Event.query.filter_by(uid = currentU).first() \
+                and Event.query.filter_by(image = eventPhotoPath).first():
+                    return jsonify({'message': 'Event already exists.'}), 409
+            else:
+                event = Event(
+                    description = request.form['description'],
+                    start_date = datetime.strptime(request.form['start_date'], '%d-%m-%Y') ,
+                    end_date = datetime.strptime(request.form['end_date'], '%d-%m-%Y'),
+                    title = request.form['title'],
+                    venue = request.form['venue'],
+                    website_url = request.form['website_url'],
+                    status = 'Pending',
+                    image = eventPhotoPath,
+                    uid = currentU,
+                    created_at= datetime.now(timezone.utc)
+                )
+
+                #add event to db
+                db.session.add(event)
+                db.session.commit()
+
+                
+                #get the event from the db (using description, user_id and photo to identify)
+                newEvent = Event.query.filter_by(description = request.form['description']) \
+                                    .filter_by(uid = currentU) \
+                                    .filter_by(image = eventPhotoPath) \
+                                    .first()
+
+                if Schedule.query.filter_by(eventId=newEvent.id, groupId=groupId).first():
+                    return jsonify({'message': 'Event already attached to group'}), 409
+                else:
+                    sched = Schedule(
+                        eventId = newEvent.id,
+                        groupId = groupId
+                    )
+
+                    db.session.add(sched)
+                    
+                
+                if Submit.query.filter_by(eventId=newEvent.id, userId=currentU).first():
+                    return jsonify({'message': 'User already created event'}), 409
+                else:
+                    submit = Submit(
+                        eventId = newEvent.id,
+                        userId = currentU
+                    )
+
+                    db.session.add(submit)
+
+                db.session.commit()
+
+                #send api response
+                # return jsonify({'event': eventResult}), 201
+                return jsonify({'id': newEvent.id, 
+                                'description': newEvent.description,  \
+                                'start_date': newEvent.start_date,    \
+                                'end_date': newEvent.end_date,    \
+                                'title': newEvent.title,  \
+                                'venue': newEvent.venue,    \
+                                'website_url': newEvent.website_url,    \
+                                'status': newEvent.status,    \
+                                'image': newEvent.image,  \
+                                'uid': newEvent.uid}), 201
         else:
-            event = Event(
-                description = request.form['description'],
-                start_date = request.form['start_date'],
-                end_date = request.form['end_date'],
-                title = request.form['title'],
-                venue = request.form['venue'],
-                website_url = request.form['website_url'],
-                status = request.form['status'],
-                image = eventPhotoPath,
-                uid = request.form['uid']
-            )
-
-            #add event to db
-            db.session.add(event)
-            db.session.commit()
-
-            #get the event from the db (using description, user_id and photo to identify)
-            newEvent = Event.query.filter_by(description = request.form['description']) \
-                                .filter_by(uid = request.form['uid']) \
-                                .filter_by(image = eventPhotoPath) \
-                                .first()
-
-            #send api response
-            # return jsonify({'event': eventResult}), 201
-            return jsonify({'id': newEvent.id, 
-                            'description': newEvent.description,  \
-                            'start_date': newEvent.start_date,    \
-                            'end_date': newEvent.end_date,    \
-                            'title': newEvent.title,  \
-                            'venue': newEvent.venue,    \
-                            'website_url': newEvent.website_url,    \
-                            'status': newEvent.status,    \
-                            'image': newEvent.image,  \
-                            'uid': newEvent.uid}), 201
+        #    abort(400) #bad request http code
+            return jsonify({'event': []}), 400
     else:
-    #    abort(400) #bad request http code
-        return jsonify({'event': []}), 400
+        return jsonify({'message': 'You are not in this group!'}), 401
 
 
 @app.route('/api/events/<event_id>', methods = ['GET'])
@@ -291,21 +321,21 @@ def updateEvent(event_id):
 
     # event= Event.query.filter_by(id=event_id).first()
     schedule = Schedule.query.filter_by(eventId=event_id).first()
-    group = Group.query.filter_by(id=schedule.groupId)
+    group = Group.query.filter_by(id=schedule.groupId).first()
     # check if the current user it the admin for the group responsible for the event
     if g.current_user['sub'] == group.admin:
         # {title, start_date, end_date, description, venue, websiteurl, status}= request.form
         data = request.form
         event = Event.query.filter_by(id=event_id).first()
-        event.start_date = data.start_date
-        event.end_date = data.end_date
-        event.description = data.description
-        event.venue = data.venue
-        event.websiteurl = data.websiteurl
-        event.status = data.status
+        # event.start_date = data.start_date
+        # event.end_date = data.end_date
+        # event.description = data.description
+        # event.venue = data.venue
+        # event.websiteurl = data.websiteurl
+        event.status = data['status']
         db.session.commit()
         # event.status = 'Published'
-        # return jsonify({'id': event.id, 'status': event.status})
+        return jsonify({'id': event.id, 'status': event.status})
     else:
         return jsonify({'result': 'Not allowed'}), 400
 
@@ -317,15 +347,19 @@ def updateEvent(event_id):
 def addMember(groupId, email):
     # ! should i get the email from a for field or should it just be passed in?
     # Check if the logged in user is the admin of the group they want to add the user to 
-    isAdmin = db.session.query(db.exists().where(Group.id == groupId, Group.admin==g.current_user['sub'])).scalar()
+    # get admin of group thru id
+    group = db.session.query(Group).filter_by(id=groupId).first()
+    admin = group.admin
+
+    
     # Check if the member exists    
     memberExists = db.session.query(db.exists().where(User.email==email)).scalar()
-    
-    if isAdmin == True: 
-        if memberExists==True:
-            member = User.query.filter_by(email=email).first()
+    member = db.session.query(User).filter_by(email=email).first()
+
+    if admin == g.current_user['sub']: 
+        if member is not None:
             # Check if the member already exist in the affiliate table
-            if Affiliate.query.filter_by(userId=member.id):
+            if Affiliate.query.filter_by(userId=member.id, groupId=groupId).first():
                 return jsonify({'message': 'User already a member'}), 409
             else:
                 # Update the affiliation table with the new member 
@@ -349,28 +383,6 @@ def addMember(groupId, email):
         return jsonify({'message': 'Must be logged into an active session and be admin of group'}), 400
 
 
-# @app.route('/api/groups/<groupId>,<eventId>', methods = ['POST'])
-# @requires_auth
-def attachEventToGroup(groupId, eventId):
-    # Check if event, group mapping already exists in the schedule table
-    if Schedule.query.filter_by(eventId=eventId, groupId=groupId):
-        return jsonify({'message': 'Event already attached to group'}), 409
-    else:
-        schedule=Schedule(
-            eventId=eventId,
-            groupId=groupId
-        )
-
-        # Add member to Affiliation in db
-        db.session.add(schedule)
-        db.session.commit()
-
-        # get the new member just added
-        neweventgroup = Schedule.query.filter_by(eventId=eventId, groupId=groupId).first()
-
-        # build jsonify response
-        return jsonify({'eventId': neweventgroup.eventId, 'groupId': neweventgroup.groupId}), 201
-
 @app.route('/api/groups', methods = ['POST'])
 @requires_auth
 def createGroup():    
@@ -393,6 +405,19 @@ def createGroup():
             # get the new member just added
             newgroup = Group.query.filter_by(name=groupName).first()
 
+           # Check if the member already exist in the affiliate table
+            if Affiliate.query.filter_by(userId=g.current_user['sub'], groupId=newgroup.id).first():
+                return jsonify({'message': 'User already a member'}), 409
+            else:
+                # Update the affiliation table with the new member 
+                affiliate=  Affiliate(
+                    userId= g.current_user['sub'],
+                    groupId=newgroup.id
+                )
+
+                # Add member to Affiliation in db
+                db.session.add(affiliate)
+                db.session.commit()
             # build jsonify response
             return jsonify({'id': newgroup.id, 'name': newgroup.name, 'admin': newgroup.admin}), 201
 
