@@ -1,6 +1,6 @@
 import os, re
 from app import app, db
-from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort, jsonify, g, make_response
+from flask import request,url_for, send_from_directory, abort, jsonify, g, make_response
 # from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
