@@ -143,3 +143,16 @@ class Submit(db.Model):
 
     def __repr__(self):
         return '<Submit %r,%r>' % (self.eventId, self.userId)
+
+# JSON web tokens blacklisttable
+class JWTBlacklist(db.Model):
+    __tablename__ = 'jwtspoils'
+
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.Text)
+
+    def __init__(self, token):
+        self.token = token
+
+    def __repr__(self):
+        return '<JWTSPOILS %r>' % (self.id)
