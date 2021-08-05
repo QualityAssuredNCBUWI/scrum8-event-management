@@ -409,7 +409,7 @@ def addEvents():
                 return jsonify({"status": "User is not in group"}), 403 
             
             # get photo filename
-            rawEventPhoto = request.files['image']
+            rawEventPhoto = request.files['images']
             eventFilename = secure_filename(rawEventPhoto.filename)
             rawEventPhoto.save(os.path.join(
                 app.config['EVENT_UPLOAD_FOLDER'], eventFilename
@@ -423,7 +423,7 @@ def addEvents():
                 and Event.query.filter_by(end_date = datetime.strptime(request.form['end_date'], "%Y-%m-%d %H:%M:%S %z")).first() \
                 and Event.query.filter_by(title = request.form['title']).first() \
                 and Event.query.filter_by(venue = request.form['venue']).first() \
-                and Event.query.filter_by(website_url = request.form['website_url']).first() \
+                and Event.query.filter_by(website_url = request.form['websiteurl']).first() \
                 and Event.query.filter_by(uid = g.current_user['sub']).first() \
                 and Event.query.filter_by(image = eventFilename).first():
                     return jsonify({'message': 'Event already exists.'}), 409
@@ -434,7 +434,7 @@ def addEvents():
                     start_date = datetime.strptime(request.form['start_date'], "%Y-%m-%d %H:%M:%S %z"),
                     end_date = datetime.strptime(request.form['end_date'], "%Y-%m-%d %H:%M:%S %z"),
                     venue = request.form['venue'],
-                    website_url = request.form['website_url'],
+                    website_url = request.form['websiteurl'],
                     status = "pending",
                     image = eventFilename,
                     uid = g.current_user['sub'],
