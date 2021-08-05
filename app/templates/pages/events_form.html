@@ -1,39 +1,51 @@
 {% extends 'base.html' %}
 
 {% block main%}
-<form action="" method="post">
-    {{ form.csrf_token }}
-    <div class= "form-group">
-        {{ form.title.label}}
-        {{ form.title }}
-    </div>
-    <div class= "form-group">
-        {{ form.start_date.label}}
-        {{ form.start_date }}
-    </div>
-    <div class= "form-group">
-        {{ form.end_date.label}}
-        {{ form.end_date }}
-    </div>
-    <div class= "form-group">
-        {{ form.description.label}}
-        {{ form.description }}
-    </div>
-    <div class= "form-group">
-        {{ form.venue.label}}
-        {{ form.venue }}
-    </div>
-    <div class= "form-group">
-        {{ form.websiteurl.label}}
-        {{ form.websiteurl }}
-    </div>
-    <div class= "form-group">
-        {{ form.status.label}}
-        {{ form.status }}
-    </div>
-    <div class= "form-group">
-        {{ form.images.label}}
-        {{ form.images }}
-    </div>
-</form>
+<div class="container">
+<section id="event-form" class="container-fluid">
+    <h3 class="font-weight-bold display-3">
+      Create New Event
+    </h3>
+    <form action="" method="post">
+        {{ form.csrf_token }}
+        <div class= "form-group col w-50 mb-2">
+            {{ form.title.label}}
+            {{ form.title(class='form-control') }}
+        </div>
+        <div class= "form-group col w-50 mb-2">
+            {{ form.start_date.label}}
+            {{ form.start_date(class='form-control') }}
+        </div>
+        <div class= "form-group col w-50 mb-2">
+            {{ form.end_date.label}}
+            {{ form.end_date(class='form-control') }}
+        </div>
+        <div class= "form-group col w-50 mb-2">
+            {{ form.description.label}}
+            {{ form.description(class='form-control') }}
+        </div>
+        <div class= "form-group col w-50 mb-2">
+            {{ form.venue.label}}
+            {{ form.venue(class='form-control') }}
+        </div>
+        <div class= "form-group col w-50 mb-2">
+            {{ form.websiteurl.label}}
+            {{ form.websiteurl(class='form-control') }}
+        </div>
+        <div class= "form-group col w-50 mb-2">
+            {{ form.status.label}}
+            {{ form.status(class='form-control') }}
+        </div>
+        <div class= "form-group col w-50 mb-2">
+            {{ form.group.label}}
+            {{ form.group(class='form-control') }}
+        </div>
+        <div class= "form-group col w-50 mb-2">
+            {{ form.images.label}}
+            {{ form.images(class='form-control') }}
+        </div>
+        <button type="submit" class="btn btn-success mb-5">Submit</button>
+    </form>
+</section>
+</div>
 {% endblock %}

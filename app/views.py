@@ -44,6 +44,8 @@ def login_page():
 @app.route('/createEvents')
 def createEvents_page():
     form= CreateEvent()
+    groups = Group.query.all()
+    form.group.choices = ([(g.id, g.name) for g in groups])
     return render_template('pages/events_form.html', form=form)
 
 

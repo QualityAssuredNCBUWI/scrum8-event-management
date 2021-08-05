@@ -35,7 +35,7 @@ def register():
             user = User(
                 first_name=request.form['first_name'],
                 last_name=request.form['last_name'],
-                password = request.form['password'], 
+                password = request.form['password'],
                 email = request.form['email'],
                 profile_photo = filename,
                 created_at =  datetime.now(timezone.utc)
