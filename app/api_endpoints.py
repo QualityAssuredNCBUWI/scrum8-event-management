@@ -292,7 +292,7 @@ def updateEvent(eventid):
     schedule = Schedule.filter_by(eventId=eventid).first()
     groupid=schedule.groupId
     group = Group.query.filter_by(id=groupid)
-    if sub == group.admin:
+    if g.current_user['sub'] == group.admin:
         event.status = 'Published'
         return jsonify({'id': event.id, 'status': event.status})
     else:
@@ -306,7 +306,7 @@ def updateEvent(eventid):
 def addMember(groupId, email):
     # ! should i get the email from a for field or should it just be passed in?
     # Check if the logged in user is the admin of the group they want to add the user to 
-    isAdmin = db.session.query(db.exists().where(Group.id == groupId, Group.admin==sub)).scalar()
+    isAdmin = db.session.query(db.exists().where(Group.id == groupId, Group.admin==g.current_user['sub'])).scalar()
     # Check if the member exists    
     memberExists = db.session.query(db.exists().where(User.email==email)).scalar()
     
@@ -372,7 +372,7 @@ def createGroup():
             # create Group
             group = Group(
                 name= request.form['name'],
-                admin=sub
+                admin=g.current_user['sub']
             )
             
             # Add member to Affiliation in db
