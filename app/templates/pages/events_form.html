@@ -8,39 +8,43 @@
     </h3>
     <form action="" method="post">
         {{ form.csrf_token }}
-        <div class= "form-group col w-25 mb-2">
+        <div class= "form-group col w-50 mb-2">
             {{ form.title.label}}
-            {{ form.title }}
+            {{ form.title(class='form-control') }}
         </div>
-        <div class= "form-group col w-25 mb-2">
+        <div class= "form-group col w-50 mb-2">
             {{ form.start_date.label}}
-            {{ form.start_date }}
+            {{ form.start_date(class='form-control') }}
         </div>
-        <div class= "form-group col w-25 mb-2">
+        <div class= "form-group col w-50 mb-2">
             {{ form.end_date.label}}
-            {{ form.end_date }}
+            {{ form.end_date(class='form-control') }}
         </div>
-        <div class= "form-group col w-25 mb-2">
+        <div class= "form-group col w-50 mb-2">
             {{ form.description.label}}
-            {{ form.description }}
+            {{ form.description(class='form-control') }}
         </div>
-        <div class= "form-group col w-25 mb-2">
+        <div class= "form-group col w-50 mb-2">
             {{ form.venue.label}}
-            {{ form.venue }}
+            {{ form.venue(class='form-control') }}
         </div>
-        <div class= "form-group col w-25 mb-2">
+        <div class= "form-group col w-50 mb-2">
             {{ form.websiteurl.label}}
-            {{ form.websiteurl }}
+            {{ form.websiteurl(class='form-control') }}
         </div>
-        <div class= "form-group col w-25 mb-2">
+        <div class= "form-group col w-50 mb-2">
             {{ form.status.label}}
-            {{ form.status }}
+            {{ form.status(class='form-control') }}
         </div>
-        <div class= "form-group col w-25 mb-2">
+        <div class= "form-group col w-50 mb-2">
+            {{ form.group.label}}
+            {{ form.group(class='form-control') }}
+        </div>
+        <div class= "form-group col w-50 mb-2">
             {{ form.images.label}}
-            {{ form.images }}
+            {{ form.images(class='form-control') }}
         </div>
-        <button type="submit" class="btn btn-success mb-2">Submit</button>
+        <button type="submit" class="btn btn-success mb-5">Submit</button>
     </form>
 </section>
 </div>
