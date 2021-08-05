@@ -398,82 +398,80 @@ def get_all_events():
 @app.route('/api/events', methods = ['POST'])
 @requires_auth
 def addEvents():
-    try:
-        if request.form:
-            # check if the group exist 
-            if( Group.query.get(request.form["group_id"]) is None): 
-                return jsonify({"message":"group not found"}), 404
-            
-            #check if the user is in group
-            if(Affiliate.query.filter_by(userId=g.current_user['sub'], groupId=request.form["group_id"]).first() is None):
-                return jsonify({"message": "User is not in group"}), 403 
-            
-            # get photo filename
-            rawEventPhoto = request.files['images']
-            eventFilename = secure_filename(rawEventPhoto.filename)
-            rawEventPhoto.save(os.path.join(
-                app.config['EVENT_UPLOAD_FOLDER'], eventFilename
-            ))
-            
-            # check if event already exists in database 
-            # for a user to add a event, it must have at least one attribute that differs from all other events
-            event = None
-            if Event.query.filter_by(description = request.form['description']).first() \
-                and Event.query.filter_by(start_date = datetime.strptime(request.form['start_date'], "%Y-%m-%d %H:%M:%S %z")).first() \
-                and Event.query.filter_by(end_date = datetime.strptime(request.form['end_date'], "%Y-%m-%d %H:%M:%S %z")).first() \
-                and Event.query.filter_by(title = request.form['title']).first() \
-                and Event.query.filter_by(venue = request.form['venue']).first() \
-                and Event.query.filter_by(website_url = request.form['websiteurl']).first() \
-                and Event.query.filter_by(uid = g.current_user['sub']).first() \
-                and Event.query.filter_by(image = eventFilename).first():
-                    return jsonify({'message': 'Event already exists.'}), 409
-            else:
-                event = Event(
-                    title = request.form['title'],
-                    description = request.form['description'],
-                    start_date = datetime.strptime(request.form['start_date'], "%d-%m-%Y"),
-                    end_date = datetime.strptime(request.form['end_date'], "%d-%m-%Y"),
-                    venue = request.form['venue'],
-                    website_url = request.form['websiteurl'],
-                    status = "pending",
-                    image = eventFilename,
-                    uid = g.current_user['sub'],
-                    created_at= datetime.now(timezone.utc)
-                )
+    if request.form:
+        # check if the group exist 
+        if( Group.query.get(request.form["group_id"]) is None): 
+            return jsonify({"message":"group not found"}), 404
+        
+        #check if the user is in group
+        if(Affiliate.query.filter_by(userId=g.current_user['sub'], groupId=request.form["group_id"]).first() is None):
+            return jsonify({"message": "User is not in group"}), 403 
+        
+        # get photo filename
+        rawEventPhoto = request.files['images']
+        eventFilename = secure_filename(rawEventPhoto.filename)
+        rawEventPhoto.save(os.path.join(
+            app.config['EVENT_UPLOAD_FOLDER'], eventFilename
+        ))
+        # check if event already exists in database 
+        # for a user to add a event, it must have at least one attribute that differs from all other events
+        event = None
+    
+        if Event.query.filter_by(description = request.form['description']).first() \
+            and Event.query.filter_by(start_date = datetime.strptime(request.form['start_date'], "%Y-%m-%d")).first() \
+            and Event.query.filter_by(end_date = datetime.strptime(request.form['end_date'], "%Y-%m-%d")).first() \
+            and Event.query.filter_by(title = request.form['title']).first() \
+            and Event.query.filter_by(venue = request.form['venue']).first() \
+            and Event.query.filter_by(website_url = request.form['websiteurl']).first() \
+            and Event.query.filter_by(uid = g.current_user['sub']).first() \
+            and Event.query.filter_by(image = eventFilename).first():
+                return jsonify({'message': 'Event already exists.'}), 409
+        else:
+            event = Event(
+                title = request.form['title'],
+                description = request.form['description'],
+                start_date = datetime.strptime(request.form['start_date'], "%Y-%m-%d"),
+                end_date = datetime.strptime(request.form['end_date'], "%Y-%m-%d"),
+                venue = request.form['venue'],
+                website_url = request.form['websiteurl'],
+                status = "pending",
+                image = eventFilename,
+                uid = g.current_user['sub'],
+                created_at= datetime.now(timezone.utc)
+            )
+            print("here")
 
-                #add event to db
-                db.session.add(event)
-                db.session.commit()
+            #add event to db
+            db.session.add(event)
+            db.session.commit()
 
-                schedule = Schedule(event.id, request.form["group_id"])
-                db.session.add(schedule)
-                db.session.commit()
+            schedule = Schedule(event.id, request.form["group_id"])
+            db.session.add(schedule)
+            db.session.commit()
 
-                submit = Submit(event.id, g.current_user['sub'])
-                db.session.add(submit)
-                db.session.commit()
+            submit = Submit(event.id, g.current_user['sub'])
+            db.session.add(submit)
+            db.session.commit()
 
-                event_response = {
-                    'id': event.id, 
-                    'description': event.description,  'start_date': event.start_date,   
-                    'end_date': event.end_date, 
-                    'title': event.title,
-                    'venue': event.venue,  
-                    'website_url': event.website_url,
-                    'status': event.status, 
-                    'image': event.image,  
-                    'user_id': event.uid
-                }
+            event_response = {
+                'id': event.id, 
+                'description': event.description,  'start_date': event.start_date,   
+                'end_date': event.end_date, 
+                'title': event.title,
+                'venue': event.venue,  
+                'website_url': event.website_url,
+                'status': event.status, 
+                'image': event.image,  
+                'user_id': event.uid
+            }
 
-                #send api response
-                # return jsonify({'event': eventResult}), 201
-                return jsonify({
-                    "message":"event added",
-                    "group_id": request.form["group_id"],
-                    "event": event_response
-                    }), 201
-    except:
-        pass
+            #send api response
+            # return jsonify({'event': eventResult}), 201
+            return jsonify({
+                "message":"event added",
+                "group_id": request.form["group_id"],
+                "event": event_response
+                }), 201
     return jsonify({"message":"An error occured", 'event': []}), 400
 
 

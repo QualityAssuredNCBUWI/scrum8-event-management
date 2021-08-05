@@ -25,7 +25,7 @@ class CreateEvent(FlaskForm):
     description = TextAreaField('Description', validators=[InputRequired()])
     venue = StringField('Venue', validators=[InputRequired()])
     websiteurl = StringField('Web Site URL', [Optional()])
-    group = SelectField('Group', description = 'Select a group', validators=[DataRequired()])
+    group_id = SelectField('Group', description = 'Select a group', validators=[DataRequired()])
     images = FileField('Images', validators=[InputRequired()])
 
 class CreateGroup(FlaskForm):

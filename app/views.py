@@ -45,7 +45,7 @@ def login_page():
 def createEvents_page():
     form= CreateEvent()
     groups = Group.query.all()
-    form.group.choices = ([(g.id, g.name) for g in groups])
+    form.group_id.choices = ([(g.id, g.name) for g in groups])
     return render_template('pages/events_form.html', form=form)
 
 
