@@ -10,37 +10,36 @@
         <form action="/api/register" method="POST" enctype="multipart/form-data">
             {{ form.csrf_token }}
             <div class="form-row">
-                <div class="col w-25">
+                <div class="col w-25 mb-2">
                     {{ form.first_name.label}}
-                    {{ form.first_name }}
+                    {{ form.first_name(class='form-control') }}
                 </div>
-                <div class="col w-25">
+                <div class="col w-25 mb-2">
                     {{ form.last_name.label}}
-                    {{ form.last_name }}
+                    {{ form.last_name(class='form-control') }}
                 </div> 
             </div>
             <div class="form-row">
-                <div class="col w-15">
+                <div class="col w-25 mb-2">
                     {{ form.password.label}}
-                    {{ form.password }}
+                    {{ form.password(class='form-control') }}
                 </div>
-                <div class="col w-15">
+                <div class="col w-25 mb-2">
                     {{ form.confirm.label}}
-                    {{ form.confirm }}
+                    {{ form.confirm(class='form-control') }}
                 </div>
-                <div class="col w-25">
+                <div class="col w-25 mb-2">
                     {{ form.email.label}}
-                    {{ form.email }}
+                    {{ form.email(class='form-control') }}
                 </div>
             </div>
             <div class="form-row">
-                <div class="col w-50">
-                    <input type="file" name="profile_photo" >
+                <div class="col w-50 mb-5">
                     {{ form.profile_photo.label}}
-                    {{ form.profile_photo }}
+                    {{ form.profile_photo(class='form-control') }}
                 </div>
             </div>
-            <button type="submit" class="btn btn-success">Register</button>
+            <button type="submit" class="btn btn-success mb-2">Register</button>
         </form>
     </section>
 </div>

@@ -21,7 +21,7 @@ r = re.compile('(0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[- /.](19|20)\d\d')
 def register(): 
     if request.form : #TBD:update to check for essentials
         # get photo filename
-        rawPhoto = request.files['photo']
+        rawPhoto = request.files['profile_photo']
         filename = secure_filename(rawPhoto.filename)
         rawPhoto.save(os.path.join(
             app.config['PROFILE_UPLOAD_FOLDER'], filename
@@ -33,9 +33,9 @@ def register():
         else:
             # create user 
             user = User(
-                first_name=request.form['firstname'],
-                last_name=request.form['lastname'],
-                password = request.form['password'], 
+                first_name=request.form['first_name'],
+                last_name=request.form['last_name'],
+                password = request.form['password'],
                 email = request.form['email'],
                 profile_photo = filename,
                 created_at =  datetime.now(timezone.utc)
