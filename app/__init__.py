@@ -6,6 +6,7 @@ from flask import Flask
 # from flask_login import LoginManager
 from flask_sqlalchemy import SQLAlchemy
 from flask_wtf.csrf import CSRFProtect
+from flask_cors import CORS
 import pymysql
 # import mysql.connector as mysql
 from dotenv import load_dotenv
@@ -18,6 +19,9 @@ from .config import Config #configurations
 app = Flask(__name__) 
 
 db = SQLAlchemy(app) #db setup
+
+CORS(app, resources={r"/api/*": {"origins": "*"}})
+
 
 # csrf = CSRFProtect(app) #csrf token form page and from validation
 

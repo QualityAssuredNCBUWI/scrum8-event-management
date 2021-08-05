@@ -47,7 +47,7 @@ def register():
 
             #build api response with user data
             userResult = {
-                'status':"User created successfully",
+                'message':"User created successfully",
                 'id': user.id, 
                 'firstname': user.first_name,
                 'lastname': user.last_name,
@@ -83,7 +83,7 @@ def login():
             token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
 
             #send api response
-            return jsonify({'status': 'Login successful', 'token': token}), 200
+            return jsonify({'message': 'Login successful', 'token': token}), 200
         elif user is None or not check_password_hash(user.password, password):
             return jsonify({'message': 'Login unsuccessful'}), 404
         else:
@@ -97,7 +97,7 @@ def logout():
     db.session.commit()
     
     # logout_user()
-    return jsonify({'status': 'Log out successful'}), 200
+    return jsonify({'message': 'Log out successful'}), 200
 
 
 # user_loader callback. This callback is used to reload the user object from
@@ -115,11 +115,11 @@ def logout():
 def getUser(user_id):
     try:
         if (not isinstance(user_id, int) and not user_id.isnumeric()): 
-            return jsonify({"Status":"Invalid user ID"}),406
+            return jsonify({"message":"Invalid user ID"}),406
 
         user = User.query.get(user_id)
         if(user is None): 
-            return jsonify({"status":"user is unavailable"}),404
+            return jsonify({"message":"user is unavailable"}),404
         
         user_response = {
             "id": user.id,
@@ -136,7 +136,7 @@ def getUser(user_id):
         }), 200
     except:
         pass
-    return jsonify({"status":"An error occured"}),400
+    return jsonify({"message":"An error occured"}),400
 
 
 @app.route('/api/users/current', methods = ['GET'])
@@ -145,11 +145,11 @@ def getCurrentUser():
     try:
         user_id = g.current_user['sub']
         if (not isinstance(user_id, int) and not user_id.isnumeric()): 
-            return jsonify({"Status":"Invalid user ID"}),406
+            return jsonify({"message":"Invalid user ID"}),406
 
         user = User.query.get(user_id)
         if(user is None): 
-            return jsonify({"status":"user is unavailable"}),404
+            return jsonify({"message":"user is unavailable"}),404
         
         user_response = {
             "id": user.id,
@@ -166,7 +166,7 @@ def getCurrentUser():
         }), 200
     except:
         pass
-    return jsonify({"status":"An error occured"}),400
+    return jsonify({"message":"An error occured"}),400
 
 
 @app.route('/api/users/current', methods = ['PUT'])
@@ -179,11 +179,11 @@ def updateCurrentUser():
 
             user_id = g.current_user['sub']
             if (not isinstance(user_id, int) and not user_id.isnumeric()): 
-                return jsonify({"Status":"Invalid user ID"}),406
+                return jsonify({"message":"Invalid user ID"}),406
 
             user = User.query.get(user_id)
             if(user is None): 
-                return jsonify({"status":"user is unavailable"}),404
+                return jsonify({"message":"user is unavailable"}),404
             
             # update each user field if its available
             if('photo' in request.files):
@@ -228,7 +228,7 @@ def updateCurrentUser():
             
             if(error_found):
                 return jsonify({
-                    "status": "Incorrect or missing fields",
+                    "message": "Incorrect or missing fields",
                     "errors": errors
                 }), 406
 
@@ -244,7 +244,7 @@ def updateCurrentUser():
             }
 
             return jsonify({
-                "status": "user updated",
+                "message": "user updated",
                 "user": user_response
             }), 200
     except:
@@ -261,11 +261,11 @@ def updateUser(user_id):
             errors = []
 
             if (not isinstance(user_id, int) and not user_id.isnumeric()): 
-                return jsonify({"Status":"Invalid user ID"}),406
+                return jsonify({"message":"Invalid user ID"}),406
 
             user = User.query.get(user_id)
             if(user is None): 
-                return jsonify({"status":"user is unavailable"}),404
+                return jsonify({"message":"user is unavailable"}),404
             
             # update each user field if its available
             if('photo' in request.files):
@@ -310,7 +310,7 @@ def updateUser(user_id):
             
             if(error_found):
                 return jsonify({
-                    "status": "Incorrect or missing fields",
+                    "message": "Incorrect or missing fields",
                     "errors": errors
                 }), 406
 
@@ -326,12 +326,12 @@ def updateUser(user_id):
             }
 
             return jsonify({
-                "status": "user updated",
+                "message": "user updated",
                 "user": user_response
             }), 200
     except:
         pass
-    return jsonify({"status":"An error occured"}),400
+    return jsonify({"message":"An error occured"}),400
 
 
 """              API: Events              """
@@ -402,11 +402,11 @@ def addEvents():
         if request.form:
             # check if the group exist 
             if( Group.query.get(request.form["group_id"]) is None): 
-                return jsonify({"status":"group not found"}), 404
+                return jsonify({"message":"group not found"}), 404
             
             #check if the user is in group
             if(Affiliate.query.filter_by(userId=g.current_user['sub'], groupId=request.form["group_id"]).first() is None):
-                return jsonify({"status": "User is not in group"}), 403 
+                return jsonify({"message": "User is not in group"}), 403 
             
             # get photo filename
             rawEventPhoto = request.files['images']
@@ -468,13 +468,13 @@ def addEvents():
                 #send api response
                 # return jsonify({'event': eventResult}), 201
                 return jsonify({
-                    "status":"event added",
+                    "message":"event added",
                     "group_id": request.form["group_id"],
                     "event": event_response
                     }), 201
     except:
         pass
-    return jsonify({"status":"An error occured", 'event': []}), 400
+    return jsonify({"message":"An error occured", 'event': []}), 400
 
 
 @app.route('/api/events/<event_id>', methods = ['GET'])
@@ -521,7 +521,7 @@ def updateEvent(event_id):
         # event.status = 'Published'
         return jsonify({'id': event.id, 'status': event.status})
     else:
-        return jsonify({'result': 'Not allowed'}), 400
+        return jsonify({'message': 'Not allowed'}), 400
 
 @app.route('/api/events/<event_id>', methods = ['DELETE']) 
 @requires_auth
@@ -567,18 +567,18 @@ def getPending(group_id):
     try:
         user_id = g.current_user['sub']
         if (not isinstance(user_id, int) and not user_id.isnumeric()): 
-            return jsonify({"Status":"Invalid user ID"}),406
+            return jsonify({"message":"Invalid user ID"}),406
 
         if (not isinstance(group_id, int) and not group_id.isnumeric()): 
-            return jsonify({"Status":"Invalid group ID"}),406 
+            return jsonify({"message":"Invalid group ID"}),406 
         
         group = Group.query.get(group_id)
         if ( group == None): 
-            return jsonify({"status":"Group unavailable"}),404
+            return jsonify({"message":"Group unavailable"}),404
 
         # check if the user is the group admin
         if(group.admin != user_id):
-            return jsonify({"status":"User is not the group admin"}),401
+            return jsonify({"message":"User is not the group admin"}),401
 
         # get the events if the group exist
         schedules = Schedule.query.filter_by(groupId = group_id).all()
@@ -602,11 +602,11 @@ def getPending(group_id):
                     'created_date': event.created_at
                 })
 
-        return jsonify({"status": "events", "group": group_id, "events":events})
+        return jsonify({"message": "events", "group": group_id, "events":events})
     except:
         pass
 
-    return jsonify({"status":"an error occured"})
+    return jsonify({"message":"an error occured"})
             
 
 @app.route('/api/events/groups/<group_id>', methods= ['GET'])
@@ -615,7 +615,7 @@ def getEventsInGroup(group_id):
         if (not isinstance(group_id, int) and not group_id.isnumeric()): abort(400)
 
         if ( Group.query.get(group_id) == None): 
-            return jsonify({"status":"Group unavailable"}),404
+            return jsonify({"message":"Group unavailable"}),404
         
         # get the evnts if the group exist
         schedules = Schedule.query.filter_by(groupId = group_id).all()
@@ -639,11 +639,11 @@ def getEventsInGroup(group_id):
                     'created_date': event.created_at
                 })
 
-        return jsonify({"status": "events", "group": group_id, "events":events})
+        return jsonify({"message": "events", "group": group_id, "events":events})
     except:
         pass
 
-    return jsonify({"status":"an error occured"})
+    return jsonify({"message":"an error occured"})
     
 
 """              API: Group              """

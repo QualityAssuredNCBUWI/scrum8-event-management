@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block main %}
+<div class="container">
+    <h2>All Events</h2>
+    <div id="events-list">
+
+    </div>
+
+</div>
+<!-- Jquery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script>
+    $( window ).ready(function() {
+        $.get("http://127.0.0.1:8079/api/events", function(data, status){
+            let events = data.result;
+            console.log(events[0])
+            
+            let event_cards = ""
+            for (const event of events){
+                let card = `
+                    <div class="event-card">
+                       <h4>Name: ${event.title}</h4> 
+                       <p>Description: ${event.description}</p>
+                       <p>Venue:  ${event.venue}</p>
+                    </div>
+                `
+
+                event_cards += card
+            }
+            $("#events-list").html(event_cards);
+
+
+        });
+
+    });
+</script>
+
+<style>
+    .events-list{
+        display: flex;
+        flex-flow: column;
+        flex-wrap: nowrap;
+        justify-content: center;
+        overflow-y: auto;
+
+    }
+
+    .event-card{
+        border-radius: 0.5rem;
+        background-color: gray;
+        color: white;
+        padding: 0.5rem;
+        margin: 0.5rem;
+        display: flex;
+        flex-flow: column;
+    }
+
+    .event-card:hover{
+        background-color: rgb(95, 95, 95);
+    }
+</style>
+{% endblock %}
+
