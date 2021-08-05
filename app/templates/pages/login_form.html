@@ -4,7 +4,7 @@
 <div class="container">
     <section id="login-form" class="container-fluid">
         <h3 class="font-weight-bold display-3">
-          Register New User
+          Login
         </h3>
         <form action="/api/auth/login" method="POST" enctype="multipart/form-data">
             {{ form.csrf_token }}
@@ -18,7 +18,7 @@
                     {{ form.password }}
                 </div> 
             </div>
-            <button type="submit" class="btn btn-success">Register</button>
+            <button type="submit" class="btn btn-success">Login</button>
         </form>
     </section>
 </div>
