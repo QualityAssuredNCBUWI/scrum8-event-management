@@ -52,6 +52,7 @@ def createEvents_page():
 @app.route('/createGroups')
 def createGroups_page():
     form= CreateGroup()
+
     return render_template('pages/group_form.html', form=form)
       
 @app.route('/events')
@@ -60,7 +61,10 @@ def viewAllEvents():
 
 @app.route('/addMember')
 def addNewMember():
-    return render_template('pages/add_member.html')
+    form= AddMember()
+    groups = Group.query.all()
+    form.group.choices = ([(g.id, g.name) for g in groups])
+    return render_template('pages/add_member.html', form=form)
 
 # FOR ADD EVENT
 #  the createGroup method requires the schedule endpoint aka attachEventToGroup
