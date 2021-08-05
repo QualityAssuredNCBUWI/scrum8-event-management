@@ -4,7 +4,7 @@ Jinja2 Documentation:    http://jinja.pocoo.org/2/documentation/
 Werkzeug Documentation:  http://werkzeug.pocoo.org/documentation/
 This file creates your application.
 """
-import os
+import os, re
 from app import app, db, login_manager
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort, jsonify, g, make_response
 from flask_login import login_user, logout_user, current_user, login_required
@@ -12,13 +12,15 @@ from app.models import User, Event, Affiliate, Schedule, Submit
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 #from datetime import datetime, timezone
-import datetime
+from datetime import datetime
 
 # Using JWT
 import jwt
 from flask import _request_ctx_stack
 from functools import wraps
-import datetime
+
+# Used to validate dates
+r = re.compile('(0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[- /.](19|20)\d\d')
 
 """                              JWT                          """
 # Create a JWT @requires_auth decorator
@@ -168,7 +170,6 @@ def login():
             return jsonify({'message': 'Login unsuccessful'}), 404
         else:
             return jsonify({'message': 'Server may have encountered an error'}), 500
-        
 
 # user_loader callback. This callback is used to reload the user object from
 # the user ID stored in the session
@@ -179,7 +180,7 @@ def load_user(id):
 
 @app.route('/api/auth/logout', methods=['POST'])
 @requires_auth
-def logout(): 
+def logout():
     logout_user()
     #build api response 
     # result = {
@@ -219,29 +220,63 @@ def getUser(user_id):
 """              API: Events              """
 
 @app.route('/api/events', methods = ['GET'])
-@requires_auth
-def getAllEvent():
+def get_all_events():
+    """
+        Get all events that match the filters for start and end date and title if they exist.
+    """
     if request.method == 'GET':
-        event = db.session.query(Event).all()
-        print(event)
+        start = request.args.get('start_date')
+        if start is None:
+            start = ''
+        end = request.args.get('end_date')
+        if end is None:
+            end = ''
+        title = request.args.get('title')
+        if start == '' and end == '' and title is None:
+            events = db.session.query(Event).all()
+            print(1)
+        elif r.match(start) is not None and r.match(end) is not None and title is not None:
+            start = datetime.strptime(start, '%d-%m-%Y')
+            end = datetime.strptime(end, '%d-%m-%Y')
+            events = Event.query.filter(Event.end_date>=end).filter(Event.start_date>=start).filter_by(title=title).all()
+            print(2)
+        elif r.match(start) is not None and r.match(end) is not None and title is None:
+            start = datetime.strptime(start, '%d-%m-%Y')
+            end = datetime.strptime(end, '%d-%m-%Y')
+            events = Event.query.filter(Event.end_date <= end).filter(Event.start_date >= start).all()
+            print(3)
+        elif r.match(start) is not None and r.match(end) is None and title is None:
+            start = datetime.strptime(start, '%d-%m-%Y')
+            events = Event.query.filter(Event.start_date >= start).all()
+            print(4)
+        elif r.match(start) is None and r.match(end) is not None and title is None:
+            end = datetime.strptime(end, '%d-%m-%Y')
+            events = Event.query.filter(Event.end_date <= end).all()
+            print(5)
+        elif r.match(start) is None and r.match(end) is None and title is not None:
+            events = Event.query.filter_by(title=title).all()
+            print(6)
+        elif r.match(start) is None and r.match(end) is None and title is None:
+            return jsonify({"message": "Invalid query parameters, Dates should be formatted as dd-mm-yyyy"}), 400
+        else:
+            return jsonify({"message": "Invalid query parameters, Dates should be formatted as dd-mm-yyyy"}), 400
         result = []
-        if len(event) != 0:
-            for e in event:
-                id = e.id
-                title = e.title
-                description = e.description
-                start_date = e.start_date
-                end_date = e.end_date
-                venue = e.venue
-                website_url = e.website_url
-                status = e.status
-                image = e.image
-                uid = e.uid
-                cresult = {'id': id, "description": description, "title": title, "start_date": start_date, "end_date": end_date, "venue": venue, "website_url": website_url, "status": status, "image": image, "uid": uid}
-                result.append(cresult)
+        if len(events) != 0:
+            for event in events:
+                eid = event.id
+                title = event.title
+                description = event.description
+                start_date = event.start_date
+                end_date = event.end_date
+                venue = event.venue
+                website_url = event.website_url
+                status = event.status
+                image = event.image
+                uid = event.uid
+                event = {'id': eid, "description": description, "title": title, "start_date": start_date, "end_date": end_date, "venue": venue, "website_url": website_url, "status": status, "image": image, "uid": uid}
+                result.append(event)
             return jsonify({'result': result}), 200
-        elif len(event) == 0: 
-            return jsonify({"result": event}), 404
+        return jsonify({"message": "No events found."}), 404
 
 @app.route('/api/events', methods = ['POST'])
 @requires_auth
@@ -308,32 +343,27 @@ def addEvents():
         return jsonify({'event': []}), 400
 
 
-@app.route('/api/events/<id>', methods = ['GET'])
+@app.route('/api/events/<event_id>', methods = ['GET'])
 @requires_auth
-def getevent(id):
-    event = Event.query.filter_by(id = id).all()  # .all() is used on the BaseQuery to return an array for the results, allowing us to evaluate if we got no reult
-
-    if len(event) !=0:
-        for e in event:
-            eid = e.id
-            description = e.description
-            start_date = e.start_date
-            end_date = e.end_date
-            title = e.title
-            venue = e.venue
-            website_url = e.website_url
-            status = e.status
-            image = e.image
-            uid = e.uid
+def getevent(event_id):
+    event = Event.query.filter_by(id=event_id).first()
+     # .all() is used on the BaseQuery to return an array for the results,
+     # allowing us to evaluate if we got no reult
+    if event is not None:
+        eid = event.id
+        description = event.description
+        start_date = event.start_date
+        end_date = event.end_date
+        title = event.title
+        venue = event.venue
+        website_url = event.website_url
+        status = event.status
+        image = event.image
+        uid = event.uid
 
         return jsonify({'id': eid, "description": description, "start_date": start_date, "end_date": end_date, "title": title, "venue": venue, "website_url": website_url, "status": status, "image": image, "uid": uid}), 200
-    elif len(event) == 0: 
-        return jsonify({"result": event}), 404
-    # else:
-    #     return jsonify({'result': "Access token is missing or invalid"}), 401
-        
-
-
+    elif event is None:
+        return jsonify({"message": "No event found."}), 404        
 
 
 # Please create all new routes and view functions above this route.
