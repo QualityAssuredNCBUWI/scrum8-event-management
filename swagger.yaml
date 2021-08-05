@@ -109,7 +109,7 @@ paths:
       - "groups"
       summary: "Add User to group"
       description: "Adds a specified user to an existing group"
-      operationId: "addUserToGroup"
+      operationId: "addMember"
       produces: 
       - "application/xml"
       - "application/json"
@@ -126,18 +126,14 @@ paths:
         required: true
         type: "string"
       responses:
-        "200":
+        "201":
           description: "Member successfully added to group"
           schema:
             $ref: "#/definitions/Affiliation"
         "400":
-          description: "User ID supplied may be incorrect"
+          description: "User email doesnt exist or user not logged into active session"
           schema:
             $ref: "#/definitions/ApiResponse"
-        "404":
-          description: "User not found"
-          schema:
-            $ref: "#/definitions/ApiResponse" 
       security:
       - api_key: []
       
@@ -164,16 +160,43 @@ paths:
           schema:
             $ref: "#/definitions/Groups"
         "400":
-          description: "Invalid userId supplied"
+          description: "Bad Request"
           schema:
             $ref: "#/definitions/ApiResponse"
-        "404":
-          description: "Not found"
+        "409":
+          description: "Conflict in Affiliate Table, mapping may already exist"
           schema:
             $ref: "#/definitions/ApiResponse" 
       security:
       - api_key: []
-        
+  /api/events/groups/{groupId}/pending:
+    get:
+      tags:
+      - "events"
+      summary: "Get all pending events within group"
+      description: "Returns list of pending events"
+      operationId: "getAllPending"
+      produces:
+      - "application/xml"
+      - "application/json"
+      parameters:
+      - name: "groupId"
+        in: "path"
+        description: "ID group to retieve pending events for"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "successful operation"
+          schema:
+            $ref: "#/definitions/Events-Pending"
+        "401":
+          description: "You are not an Admin!"
+          schema:
+            $ref: "#/definitions/ApiResponse"
+      security:
+      - api_key: []
   /api/events/{eventId}:
     get:
       tags:
@@ -289,7 +312,7 @@ paths:
       - "users"
       summary: "Retrieves user by ID"
       description: "allows a user to view their profile information"
-      operationId: "getUserById"
+      operationId: "getUser"
       produces:
       - "application/json"
       parameters:
@@ -306,8 +329,6 @@ paths:
               $ref: "#/definitions/Users"
         "400":
           description: "Invalid user ID supplied"
-        "404":
-          description: "User not found"
       security:
       - api_key: []
       
@@ -316,7 +337,7 @@ paths:
       - "users"
       summary: "Update user profile "
       description: "allows a user to update their profile"
-      operationId: "updateUserProfileById"
+      operationId: "updateUser"
       produces:
       - "application/json"
       parameters: 
@@ -333,8 +354,6 @@ paths:
               $ref: "#/definitions/Users"
         "400":
           description: "Invalid user ID supplied"
-        "404":
-          description: "User not found"
       security:
        - api_key: []
             
@@ -459,6 +478,49 @@ definitions:
         format: "date"
     xml:
       name: "Users"
+  
+  Events-Pending:
+    type: "object"
+    properties:
+      id:
+        type: "integer"
+        format: "int64"
+      title:
+        type: "string"
+        example: "The Party"
+      created_at:
+        type: "string"
+        format: "date"
+      start_date:
+        type: "string"
+        format: "date"
+      end_date:
+        type: "string"
+        format: "date"
+      description:
+        type: "string"
+        example: "The hottest party of the year, since Covid-19"
+      venue:
+        type: "string"
+        example: "21 Kingston Road, Bog Walk, St. Catherine, Jamaica"
+      image:
+        type: "string"
+        format: "url"
+        example: "flyer.jpg"
+      website_url: 
+        type: "string"
+        format: "URL"
+        example: "https://theparty.com"
+      status:
+        type: "string"
+        description: "The status of event"
+        enum: [pending, published]
+      uid:
+        type: "integer"
+        format: "int64"
+        description: "user id of user who created the event"
+    xml:
+      name: "Events-Pending"
       
   Affiliation:
     type: "object"
