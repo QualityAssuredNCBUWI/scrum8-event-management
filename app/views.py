@@ -4,11 +4,14 @@ Jinja2 Documentation:    http://jinja.pocoo.org/2/documentation/
 Werkzeug Documentation:  http://werkzeug.pocoo.org/documentation/
 This file creates your application.
 """
+from operator import sub
 import os
+
+from flask.wrappers import Request
 from app import app, db, login_manager
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort, jsonify, g, make_response
 from flask_login import login_user, logout_user, current_user, login_required
-from app.models import User, Event, Affiliate, Schedule, Submit
+from app.models import User, Event, Affiliate, Schedule, Submit, Group
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 #from datetime import datetime, timezone
@@ -70,15 +73,7 @@ def requires_auth(f):
 # This route doesn't require a JWT
 @app.route('/api/register', methods=['POST'])
 def register(): 
-    # if the request data is not there
-    # or any of the username/password/name/email is missing
-    # respond with a bad request code and stop registration
-    # if not request.json: # or not 'username' in request.json or not 'password' in request.json or not 'name' in request.json or not 'email' in request.json:
-    #    abort(400) #bad request http code
-    #if not request.form: # or not 'username' in request.form or not 'password' in request.form or not 'name' in request.form or not 'email' in request.form:
-     #  abort(400) #bad request http code
-
-    if request.form: #TBD:update to check for essentials
+    if request.form : #TBD:update to check for essentials
         # get photo filename
         rawPhoto = request.files['photo']
         filename = secure_filename(rawPhoto.filename)
@@ -87,9 +82,8 @@ def register():
         ))
         
         # check if user already exists in database
-        if User.query.filter_by(username = request.form['username']).first() \
-            or User.query.filter_by(email = request.form['email']).first():
-                 return jsonify({'message': 'Username or email already exists.'}), 409
+        if User.query.filter_by(email = request.form['email']).first():
+                 return jsonify({'message': 'Email already exists.'}), 409
         else:
             # create user 
             user = User(
@@ -106,29 +100,26 @@ def register():
             db.session.commit()
 
             #get the user from the db
-            newUser = User.query.filter_by(username = request.form['username']).first()
+            newUser = User.query.filter_by(email = request.form['email']).first()
 
             #build api response with user data
             userResult = {
                 'id': newUser.id, 
-                'username': newUser.username,
-                'firstname': newUser.firstname,
-                'lastname': newUser.lastname,
+                'firstname': newUser.first_name,
+                'lastname': newUser.last_name,
                 'email': newUser.email,
-                'photo': newUser.photo,
+                'photo': newUser.profile_photo,
                 'created_at': newUser.created_at
             }
             
             #send api response
-            # return jsonify({'user': userResult}), 201
-            return jsonify({'id': newUser.id, \
-                            'username': newUser.username,   \
-                            'name''username': newUser.username,\
-                            'firstname': newUser.firstname, \
-                            'lastname': newUser.lastname, \
-                            'email': newUser.email, \
-                            'photo': newUser.photo,\
-                            'created_at': newUser.created_at}), 201
+            return jsonify(userResult), 201
+            # return jsonify({'id': newUser.id, \
+            #                 'firstname': newUser.first_name, \
+            #                 'lastname': newUser.last_name, \
+            #                 'email': newUser.email, \
+            #                 'photo': newUser.photo,\
+            #                 'created_at': newUser.created_at}), 201
     else:
     #    abort(400) #bad request http code
         return jsonify({'user': []}), 400
@@ -136,13 +127,13 @@ def register():
 
 @app.route('/api/auth/login', methods=['POST'])
 def login(): 
-    if not request.json or not 'username' in request.json or not 'password' in request.json:
+    if not request.json or not 'email' in request.json or not 'password' in request.json:
        abort(400) #bad request http code
     else:
-        username = request.json['username']
+        email = request.json['email']
         password = request.json['password']
 
-        user = User.query.filter_by(username=username).first()
+        user = User.query.filter_by(email=email).first()
 
         if user is not None and check_password_hash(user.password, password):
             login_user(user)
@@ -150,7 +141,7 @@ def login():
             #generate JWT token
             payload = {
                 'sub': user.id, #technical identifier of the user
-                'name': user.name,
+                'email': user.email,
                 'iat': datetime.datetime.now(datetime.timezone.utc), #current time -- generate timestamp
                 'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=10) #token expires in 10 mins -- generate timestamp
             }
@@ -197,17 +188,15 @@ def getUser(user_id):
     if len(user) !=0:
         for u in user:
             uid = u.id
-            username = u.username
-            name = u.name
+            first_name = u.first_name
+            last_name = u.last_name
             email = u.email
-            location = u.location
-            biography = u.biography
-            photo = u.photo
-            date_joined = u.date_joined
+            photo = u.profile_photo
+            created_at = u.created_at
 
         # result = {'id': uid, "username": username, "password": password, "name": name, "email": email, "location": location, "biography": biography, "photo": photo, "date_joined": date_joined}
         # return jsonify({'result':result}), 200
-        return jsonify({'id': uid, "username": username, "name": name, "email": email, "location": location, "biography": biography, "photo": photo, "date_joined": date_joined}), 200
+        return jsonify({'id': uid, "first_name": first_name, "last_name": last_name, "email": email, "photo": photo, "created_at": created_at}), 200
     elif len(user) == 0: 
         return jsonify({"result": user}), 404
     # else:
@@ -244,7 +233,7 @@ def getAllEvent():
             return jsonify({"result": event}), 404
 
 @app.route('/api/events', methods = ['POST'])
-@requires_auth
+# @requires_auth
 def addEvents():
     if request.form:
         # get photo filename
@@ -309,7 +298,7 @@ def addEvents():
 
 
 @app.route('/api/events/<id>', methods = ['GET'])
-@requires_auth
+# @requires_auth
 def getevent(id):
     event = Event.query.filter_by(id = id).all()  # .all() is used on the BaseQuery to return an array for the results, allowing us to evaluate if we got no reult
 
@@ -331,10 +320,117 @@ def getevent(id):
         return jsonify({"result": event}), 404
     # else:
     #     return jsonify({'result': "Access token is missing or invalid"}), 401
+
+
+@app.route('/api/events/<event_id>', methods = ['PUT'])
+@requires_auth
+def updateEvent(eventid):
+    data= request.form
+    
+    event= Event.query.filter_by(id=eventid).first()
+    schedule = Schedule.filter_by(eventId=eventid).first()
+    groupid=schedule.groupId
+    group = Group.query.filter_by(id=groupid)
+    if sub == group.admin:
+        event.status = 'Published'
+        return jsonify({'id': event.id, 'status': event.status})
+    else:
+        return jsonify({'result': 'Not allowed'}), 400
+
+
+
         
 
+"""              API: Group              """
+@app.route('/api/groups/<groupId>,<email>', methods = ['POST'])
+@requires_auth
+def addMember(groupId, email):
+    # ! should i get the email from a for field or should it just be passed in?
+    # Check if the logged in user is the admin of the group they want to add the user to 
+    isAdmin = db.session.query(db.exists().where(Group.id == groupId, Group.admin==sub)).scalar()
+    # Check if the member exists    
+    memberExists = db.session.query(db.exists().where(User.email==email)).scalar()
+    
+    if isAdmin == True: 
+        if memberExists==True:
+            member = User.query.filter_by(email=email).first()
+            # Check if the member already exist in the affiliate table
+            if Affiliate.query.filter_by(userId=member.id):
+                return jsonify({'message': 'User already a member'}), 409
+            else:
+                # Update the affiliation table with the new member 
+                affiliate=  Affiliate(
+                    userId= member.id,
+                    groupId=groupId
+                )
+
+                # Add member to Affiliation in db
+                db.session.add(affiliate)
+                db.session.commit()
+
+                # get the new member just added
+                newMember = Affiliate.query.filter_by(userId=member.id).first()
+
+                # build jsonify response
+                return jsonify({'userId': newMember.userId, 'groupId': newMember.groupId}), 201
+        else:
+            return jsonify({'message': 'Member with email address ' + email + ' does not exist'}), 400
+    else:
+        return jsonify({'message': 'Must be logged into an active session and be admin of group'}), 400
 
 
+# @app.route('/api/groups/<groupId>,<eventId>', methods = ['POST'])
+# @requires_auth
+def attachEventToGroup(groupId, eventId):
+    # Check if event, group mapping already exists in the schedule table
+    if Schedule.query.filter_by(eventId=eventId, groupId=groupId):
+        return jsonify({'message': 'Event already attached to group'}), 409
+    else:
+        schedule=Schedule(
+            eventId=eventId,
+            groupId=groupId
+        )
+
+        # Add member to Affiliation in db
+        db.session.add(schedule)
+        db.session.commit()
+
+        # get the new member just added
+        neweventgroup = Schedule.query.filter_by(eventId=eventId, groupId=groupId).first()
+
+        # build jsonify response
+        return jsonify({'eventId': neweventgroup.eventId, 'groupId': neweventgroup.groupId}), 201
+
+@app.route('/api/groups', methods = ['POST'])
+@requires_auth
+def createGroup():    
+    if request.form:
+        groupName= request.form['name']
+        # check if the group already exists with that name
+        if Group.query.filter_by(name=groupName).first():
+            return jsonify({'Error': 'Group already exists with that name'}), 409
+        else:
+            # create Group
+            group = Group(
+                name= request.form['name'],
+                admin=sub
+            )
+            
+            # Add member to Affiliation in db
+            db.session.add(group)
+            db.session.commit()
+
+            # get the new member just added
+            newgroup = Group.query.filter_by(name=groupName).first()
+
+            # build jsonify response
+            return jsonify({'id': newgroup.id, 'name': newgroup.name, 'admin': newgroup.admin}), 201
+
+    else:
+            return jsonify({'Group': []}), 400
+
+# FOR ADD EVENT
+#  the createGroup method requires the schedule endpoint aka attachEventToGroup
 
 # Please create all new routes and view functions above this route.
 # This route is now our catch all route for our VueJS single page

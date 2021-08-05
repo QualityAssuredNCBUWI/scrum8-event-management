@@ -1,0 +1,67 @@
+.logo {
+    float: left;
+    height: 50px;
+    width: 150px;
+}
+
+.container{
+  width: 80%;
+  margin: 0 auto;
+}
+
+nav {
+    float: right;
+}
+
+header {
+    border-bottom: 5px ridge #008038;
+    border-radius: 10px;
+    font-weight: 300;
+    margin-bottom: 20px;
+}
+
+header::after {
+    content: '';
+    display: table;
+    clear: both
+}
+
+nav ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+nav li {
+    display: inline-block;
+    margin-left: 70px;
+    margin-top: 15px ;
+
+    position: relative;
+}
+
+nav a {
+    color: #008036;
+    text-decoration: none;
+    text-transform: uppercase;
+}
+
+nav a:hover {
+    color: #000000;
+}
+
+
+nav a::after{
+    content: '';
+    display: block;
+    height: 2px;
+    width: 0%;
+    background-color: #ffdd58;
+
+    position: absolute;
+    transition: all ease-in-out 300ms;
+}
+
+nav a:hover::after{
+    width: 100%;
+}

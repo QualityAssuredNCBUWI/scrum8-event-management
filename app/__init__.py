@@ -17,9 +17,9 @@ from .config import Config #configurations
 
 app = Flask(__name__) 
 
-db = SQLAlchemy(app) #db csetup
+db = SQLAlchemy(app) #db setup
 
-csrf = CSRFProtect(app) #csrf token form page and from validation
+# csrf = CSRFProtect(app) #csrf token form page and from validation
 
 # Flask-Login login manager
 login_manager = LoginManager()

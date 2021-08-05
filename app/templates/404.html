@@ -1,4 +1,16 @@
-{% extends "base.html" %}
+{% extends 'navbar.html' %}
+
+{% block main %}
+<body>
+    
+    <p class="glitch"> <span aria-hidden="true">404</span> <span aria-hidden="true">404</span> 404</p>
+    
+    <p>This isn't the page your looking for</p>        
+
+</body>
+{% endblock %}
+
+<!-- {% extends "base.html" %}
 
 {% block title %}Page Not Found{% endblock %}
 
@@ -25,4 +37,4 @@
 <h1>404</h1>
 <p>That page doesn't even exist.</p>
 <p>Why don't you just <a href="{{ url_for('home') }}">go back home</a>?</p>
-{% endblock %}
+{% endblock %} -->
