@@ -38,7 +38,7 @@ def register():
                 password = request.form['password'], 
                 email = request.form['email'],
                 profile_photo = filename,
-                created_at =  datetime.datetime.now(datetime.timezone.utc)
+                created_at =  datetime.now(timezone.utc)
             )
 
             #add user to db
@@ -111,27 +111,35 @@ def logout():
 """              API: PROFILE MANAGEMENT              """
 
 @app.route('/api/users/<user_id>', methods = ['GET'])
-# @requires_auth
+@requires_auth
 def getUser(user_id):
-    user = User.query.filter_by(id = user_id).all()
-    if len(user) !=0:
-        for u in user:
-            uid = u.id
-            first_name = u.first_name
-            last_name = u.last_name
-            email = u.email
-            photo = u.profile_photo
-            created_at = u.created_at
-
-        # result = {'id': uid, "username": username, "password": password, "name": name, "email": email, "location": location, "biography": biography, "photo": photo, "date_joined": date_joined}
-        # return jsonify({'result':result}), 200
+    user = User.query.filter_by(id = user_id).first()
+    if g.current_user['sub'] == user.id:
+        uid = user.id
+        first_name = user.first_name
+        last_name = user.last_name
+        email = user.email
+        photo = user.profile_photo
+        created_at = user.created_at
         return jsonify({'id': uid, "first_name": first_name, "last_name": last_name, "email": email, "photo": photo, "created_at": created_at}), 200
-    elif len(user) == 0: 
+    else: 
         return jsonify({"result": user}), 404
-    # else:
-    #     # idealy need to figure out how to check the user is authenticated and token valid for a 401
-    #     return jsonify({'result': "Access token is missing or invalid"}), 401
 
+@app.route('/api/users/<user_id>', methods = ['PUT']) #update user endpoint
+@requires_auth #ensure the user is logged in
+def updateUser(user_id):
+    user = User.query.filter_by(id = user_id).first()
+    if g.current_user['sub'] == user.id:
+        data = request.form
+        # print(data)
+        user.first_name = data['first_name']
+        user.last_name = data['last_name']
+        user.email = data['email']
+        # user.profile_photo = data.profile_photo
+        db.session.commit()
+        return jsonify({'first_name': user.first_name, 'last_name': user.last_name, 'email': user.email}), 200
+    else:
+        return jsonify({'result': 'Not allowed'}), 400
 
 
 """              API: Events              """
