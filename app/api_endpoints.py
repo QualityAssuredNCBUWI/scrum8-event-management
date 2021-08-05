@@ -21,7 +21,7 @@ r = re.compile('(0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[- /.](19|20)\d\d')
 def register(): 
     if request.form : #TBD:update to check for essentials
         # get photo filename
-        rawPhoto = request.files['photo']
+        rawPhoto = request.files['profile_photo']
         filename = secure_filename(rawPhoto.filename)
         rawPhoto.save(os.path.join(
             app.config['PROFILE_UPLOAD_FOLDER'], filename
@@ -33,8 +33,8 @@ def register():
         else:
             # create user 
             user = User(
-                first_name=request.form['firstname'],
-                last_name=request.form['lastname'],
+                first_name=request.form['first_name'],
+                last_name=request.form['last_name'],
                 password = request.form['password'], 
                 email = request.form['email'],
                 profile_photo = filename,
@@ -409,7 +409,7 @@ def addEvents():
                 return jsonify({"status": "User is not in group"}), 403 
             
             # get photo filename
-            rawEventPhoto = request.files['image']
+            rawEventPhoto = request.files['images']
             eventFilename = secure_filename(rawEventPhoto.filename)
             rawEventPhoto.save(os.path.join(
                 app.config['EVENT_UPLOAD_FOLDER'], eventFilename
@@ -423,7 +423,7 @@ def addEvents():
                 and Event.query.filter_by(end_date = datetime.strptime(request.form['end_date'], "%Y-%m-%d %H:%M:%S %z")).first() \
                 and Event.query.filter_by(title = request.form['title']).first() \
                 and Event.query.filter_by(venue = request.form['venue']).first() \
-                and Event.query.filter_by(website_url = request.form['website_url']).first() \
+                and Event.query.filter_by(website_url = request.form['websiteurl']).first() \
                 and Event.query.filter_by(uid = g.current_user['sub']).first() \
                 and Event.query.filter_by(image = eventFilename).first():
                     return jsonify({'message': 'Event already exists.'}), 409
@@ -434,7 +434,7 @@ def addEvents():
                     start_date = datetime.strptime(request.form['start_date'], "%Y-%m-%d %H:%M:%S %z"),
                     end_date = datetime.strptime(request.form['end_date'], "%Y-%m-%d %H:%M:%S %z"),
                     venue = request.form['venue'],
-                    website_url = request.form['website_url'],
+                    website_url = request.form['websiteurl'],
                     status = "pending",
                     image = eventFilename,
                     uid = g.current_user['sub'],
