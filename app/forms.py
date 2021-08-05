@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import SelectField, PasswordField, StringField, DateTimeField, TextAreaField
+from wtforms import SelectField, PasswordField, StringField, DateTimeField, TextAreaField, FormField
 from wtforms.validators import InputRequired, Email, Optional,EqualTo
 
 
@@ -13,7 +13,7 @@ class SignUpForm(FlaskForm):
     email = StringField('Email', validators=[Email(),InputRequired()])
     password = PasswordField('password', validators=[InputRequired, EqualTo('confirm',message='Must be the same as previous')])
     confirm = PasswordField('Repeat Password')
-
+    profile_photo = FormField('Profile Photo', validators=[InputRequired()])
 class CreateEvent(FlaskForm):
     title = StringField('Title', validators=[InputRequired()])
     start_date = DateTimeField('Start Date', validators=[InputRequired()])
@@ -22,6 +22,6 @@ class CreateEvent(FlaskForm):
     venue = StringField('Venue', validators=[InputRequired()])
     websiteurl = StringField('Web Site URL', [Optional()])
     status = SelectField('Event Status',choices=[('Pending','Pending'),('Published','Published')],validators=[InputRequired()])
-
+    images = FormField('Images', validators=[InputRequired()])
 class CreateGroup(FlaskForm):
     name = StringField('Name', validators=[InputRequired()])

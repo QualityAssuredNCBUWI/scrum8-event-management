@@ -9,13 +9,16 @@
         <form action="/api/auth/login" method="POST" enctype="multipart/form-data">
             <div class="form-row">
                 <div class="col w-25">
-                    <label for="email">Email</label>
-                    <input id="email" type="text" name="email">
+                    {{ form.email.label}}
+                    {{ form.email }}
                 </div>
                 <div class="col w-25">
-                    <label for="password">Password</label>
-                    <input id="password" type="password" name="password">
+                    {{ form.password.label}}
+                    {{ form.password }}
                 </div> 
             </div>
             <button type="submit" class="btn btn-success">Register</button>
+        </form>
+    </section>
+</div>
 {% endblock %}
