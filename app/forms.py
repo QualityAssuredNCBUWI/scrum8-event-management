@@ -30,3 +30,8 @@ class CreateEvent(FlaskForm):
 
 class CreateGroup(FlaskForm):
     name = StringField('Name', validators=[InputRequired()])
+
+class AddMember(FlaskForm):
+    email = StringField('Email', validators=[InputRequired()])
+    group = SelectField('Group', description = 'Select a group', validators=[DataRequired()])
+

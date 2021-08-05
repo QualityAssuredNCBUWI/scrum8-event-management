@@ -647,30 +647,33 @@ def getEventsInGroup(group_id):
     
 
 """              API: Group              """
-@app.route('/api/groups/<groupId>,<email>', methods = ['POST'])
+@app.route('/api/groups/addMember', methods = ['POST'])
 @requires_auth
-def addMember(groupId, email):
+def addMember():
     # ! should i get the email from a for field or should it just be passed in?
     # Check if the logged in user is the admin of the group they want to add the user to 
     # get admin of group thru id
-    group = db.session.query(Group).filter_by(id=groupId).first()
+    email = request.form['email']
+    groupid = request.form['group']
+
+    group = db.session.query(Group).filter_by(id=groupid).first()
     admin = group.admin
 
     
     # Check if the member exists    
-    memberExists = db.session.query(db.exists().where(User.email==email)).scalar()
+    # memberExists = db.session.query(db.exists().where(User.email==email)).scalar()
     member = db.session.query(User).filter_by(email=email).first()
 
     if admin == g.current_user['sub']: 
         if member is not None:
             # Check if the member already exist in the affiliate table
-            if Affiliate.query.filter_by(userId=member.id, groupId=groupId).first():
+            if Affiliate.query.filter_by(userId=member.id, groupId=group.id).first():
                 return jsonify({'message': 'User already a member'}), 409
             else:
                 # Update the affiliation table with the new member 
                 affiliate=  Affiliate(
                     userId= member.id,
-                    groupId=groupId
+                    groupId=group.id
                 )
 
                 # Add member to Affiliation in db

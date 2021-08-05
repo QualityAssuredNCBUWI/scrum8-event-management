@@ -58,6 +58,10 @@ def createGroups_page():
 def viewAllEvents():
     return render_template('pages/view_events.html')
 
+@app.route('/addMember')
+def addNewMember():
+    return render_template('pages/add_member.html')
+
 # FOR ADD EVENT
 #  the createGroup method requires the schedule endpoint aka attachEventToGroup
 
