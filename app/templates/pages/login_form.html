@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block main%}
+<div class="container">
+    <section id="login-form" class="container-fluid">
+        <h3 class="font-weight-bold display-3">
+          Register New User
+        </h3>
+        <form action="/api/auth/login" method="POST" enctype="multipart/form-data">
+            <div class="form-row">
+                <div class="col w-25">
+                    <label for="email">Email</label>
+                    <input id="email" type="text" name="email">
+                </div>
+                <div class="col w-25">
+                    <label for="password">Password</label>
+                    <input id="password" type="password" name="password">
+                </div> 
+            </div>
+            <button type="submit" class="btn btn-success">Register</button>
+{% endblock %}
