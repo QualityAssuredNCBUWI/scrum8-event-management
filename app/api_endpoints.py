@@ -283,18 +283,28 @@ def getevent(event_id):
         return jsonify({"message": "No event found."}), 404  
 
 
+
 @app.route('/api/events/<event_id>', methods = ['PUT'])
 @requires_auth
-def updateEvent(eventid):
-    data= request.form
-    
-    event= Event.query.filter_by(id=eventid).first()
-    schedule = Schedule.filter_by(eventId=eventid).first()
-    groupid=schedule.groupId
-    group = Group.query.filter_by(id=groupid)
+def updateEvent(event_id):
+
+
+    # event= Event.query.filter_by(id=event_id).first()
+    schedule = Schedule.filter_by(eventId=event_id).first()
+    group = Group.query.filter_by(id=schedule.groupId)
     if g.current_user['sub'] == group.admin:
-        event.status = 'Published'
-        return jsonify({'id': event.id, 'status': event.status})
+        # {title, start_date, end_date, description, venue, websiteurl, status}= request.form
+        data = request.form
+        event = Event.query.filter_by(id=event_id).first()
+        event.start_date = data.start_date
+        event.end_date = data.end_date
+        event.description = data.description
+        event.venue = data.venue
+        event.websiteurl = data.websiteurl
+        event.status = data.status
+        db.session.commit()
+        # event.status = 'Published'
+        # return jsonify({'id': event.id, 'status': event.status})
     else:
         return jsonify({'result': 'Not allowed'}), 400
 
