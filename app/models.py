@@ -87,7 +87,9 @@ class Group(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(1024))
-    admin = db.Column(db.Integer, db.ForeignKey('User.id'),  nullable=False)
+    admin = db.Column(db.Integer, db.ForeignKey('User.id', ondelete="CASCADE"),  nullable=False)
+    user = db.relationship('User', backref=db.backref('group_admin', passive_deletes=True))
+
     
     def __init__(self, name, admin):
         self.name = name
@@ -103,8 +105,12 @@ class Group(db.Model):
 class Affiliate(db.Model):
     __tablename__ = 'Affiliate'
 
-    userId = db.Column(db.Integer, db.ForeignKey('User.id'), nullable=False, primary_key=True)
-    groupId = db.Column(db.Integer, db.ForeignKey('Group.id'), nullable=False, primary_key=True)
+    userId = db.Column(db.Integer, db.ForeignKey('User.id', ondelete='CASCADE'), nullable=False, primary_key=True)
+    groupId = db.Column(db.Integer, db.ForeignKey('Group.id', ondelete='CASCADE'), nullable=False, primary_key=True)
+    user = db.relationship('User', backref=db.backref('member', passive_deletes=True))
+    group = db.relationship('Group', backref=db.backref('parent_group', passive_deletes=True))
+
+
     
     def __init__(self, userId, groupId):
         self.userId = userId
@@ -120,6 +126,8 @@ class Schedule(db.Model):
 
     eventId = db.Column(db.Integer,  db.ForeignKey('Event.id', ondelete='CASCADE'), nullable=False, primary_key=True)
     groupId = db.Column(db.Integer, db.ForeignKey('Group.id', ondelete='CASCADE'), nullable=False, primary_key=True)
+    group = db.relationship('Group', backref=db.backref('group', passive_deletes=True))
+    event = db.relationship('Event', backref=db.backref('event', passive_deletes=True))
     
     def __init__(self, eventId, groupId):
         self.eventId = eventId
@@ -135,7 +143,10 @@ class Submit(db.Model):
 
     eventId = db.Column(db.Integer, db.ForeignKey('Event.id', ondelete='CASCADE'),  nullable=False, primary_key=True)
     userId = db.Column(db.Integer, db.ForeignKey('User.id', ondelete='CASCADE'),  nullable=False, primary_key=True)
+    user = db.relationship('User', backref=db.backref('creator', passive_deletes=True))
+    event = db.relationship('Event', backref=db.backref('created_event', passive_deletes=True))
     
+
     def __init__(self, eventId, userId):
         self.eventId = eventId
         self.userId = userId
