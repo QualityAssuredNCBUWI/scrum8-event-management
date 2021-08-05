@@ -123,7 +123,7 @@ def getUser(user_id):
         created_at = user.created_at
         return jsonify({'id': uid, "first_name": first_name, "last_name": last_name, "email": email, "photo": photo, "created_at": created_at}), 200
     else: 
-        return jsonify({"result": user}), 404
+        return jsonify({"result": user}), 400
 
 @app.route('/api/users/<user_id>', methods = ['PUT']) #update user endpoint
 @requires_auth #ensure the user is logged in
