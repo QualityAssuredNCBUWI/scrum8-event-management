@@ -6,7 +6,7 @@ from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from app.models import *
-from app.forms import *
+# from app.forms import *
 from app.jwt import *
 
 

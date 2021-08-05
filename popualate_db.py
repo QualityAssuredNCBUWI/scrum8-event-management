@@ -22,7 +22,7 @@ addUser(
     password="password",
     email="bobbuilder@duroad.com",
 )
-\
+
 addUser(
     first_name="Susan",
     last_name="smith",
