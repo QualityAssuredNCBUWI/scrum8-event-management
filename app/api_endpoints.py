@@ -313,12 +313,39 @@ def getevent(event_id):
         return jsonify({"message": "No event found."}), 404  
 
 
+@app.route('/api/events/groups/<group_id>/pending', methods = ['GET']) #update user endpoint
+@requires_auth #ensure the user is logged in
+def getPending(group_id):
+    # Checks if current user is the admin of the group 
+    group = Group.query.filter_by(id=group_id).first()
+    if g.current_user['sub'] == group.admin:
+        eventIDs= Schedule.query.filter_by(groupId=group_id).all()
+        statusPending = []
+        for ids in eventIDs:
+            event = Event.query.filter_by(id=ids.eventId, status='pending').first()
+            eid = event.id
+            description = event.description
+            start_date = event.start_date
+            end_date = event.end_date
+            title = event.title
+            venue = event.venue
+            website_url = event.website_url
+            status = event.status
+            image = event.image
+            uid = event.uid
+            e= {'id': eid, "description": description, "start_date": start_date, "end_date": end_date, "title": title, "venue": venue, "website_url": website_url, "status": status, "image": image, "uid": uid}
+            statusPending.append(e)
+        
+        return jsonify({'result': statusPending}), 200
+    else:
+        return jsonify({"message": "You are not an Admin!"}), 401  
+            
+
+
 
 @app.route('/api/events/<event_id>', methods = ['PUT']) #update user endpoint
 @requires_auth #ensure the user is logged in
 def updateEvent(event_id):
-
-
     # event= Event.query.filter_by(id=event_id).first()
     schedule = Schedule.query.filter_by(eventId=event_id).first()
     group = Group.query.filter_by(id=schedule.groupId).first()
@@ -339,7 +366,7 @@ def updateEvent(event_id):
     else:
         return jsonify({'result': 'Not allowed'}), 400
 
-@app.route('/api/events/<event_id>', method= ['DELETE']) 
+@app.route('/api/events/<event_id>', methods= ['DELETE']) 
 @requires_auth
 def removeEvent(event_id):
     schedule = Schedule.filter_by(eventId=event_id).first()
