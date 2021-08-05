@@ -100,8 +100,6 @@ class Group(db.Model):
         return '<Group %r>' % (self.id)
 
 
-
-
 class Affiliate(db.Model):
     __tablename__ = 'Affiliate'
 

@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+
+{% block main%}
+<form action="" method="post">
+    {{ form.csrf_token }}
+    <div class= "form-group">
+        {{ form.name.label}}
+        {{ form.name }}
+    </div>
+</form>
+{% endblock %}
