@@ -431,8 +431,8 @@ def addEvents():
                 event = Event(
                     title = request.form['title'],
                     description = request.form['description'],
-                    start_date = datetime.strptime(request.form['start_date'], "%Y-%m-%d %H:%M:%S %z"),
-                    end_date = datetime.strptime(request.form['end_date'], "%Y-%m-%d %H:%M:%S %z"),
+                    start_date = datetime.strptime(request.form['start_date'], "%d-%m-%Y"),
+                    end_date = datetime.strptime(request.form['end_date'], "%d-%m-%Y"),
                     venue = request.form['venue'],
                     website_url = request.form['websiteurl'],
                     status = "pending",

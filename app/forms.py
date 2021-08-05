@@ -1,7 +1,9 @@
 from flask_wtf import FlaskForm
 from wtforms import SelectField, PasswordField, StringField, DateTimeField, TextAreaField,FormField
+from wtforms.fields.html5 import DateField
 from wtforms.fields.simple import FileField
 from wtforms.validators import InputRequired, Email, Optional, EqualTo, DataRequired
+from datetime import datetime
 
 
 class LoginForm(FlaskForm):
@@ -18,12 +20,11 @@ class SignUpForm(FlaskForm):
 
 class CreateEvent(FlaskForm):
     title = StringField('Title', validators=[InputRequired()])
-    start_date = DateTimeField('Start Date', validators=[InputRequired()])
-    end_date = DateTimeField ('End Date', validators=[InputRequired()])
+    start_date = DateField('Start Date', validators=[InputRequired()], format="%d-%m-%Y", default=datetime.now())
+    end_date = DateField('End Date', validators=[InputRequired()], format="%d-%m-%Y", default=datetime.now())
     description = TextAreaField('Description', validators=[InputRequired()])
     venue = StringField('Venue', validators=[InputRequired()])
     websiteurl = StringField('Web Site URL', [Optional()])
-    status = SelectField('Event Status',choices=[('Pending','Pending'),('Published','Published')],validators=[InputRequired()])
     group = SelectField('Group', description = 'Select a group', validators=[DataRequired()])
     images = FileField('Images', validators=[InputRequired()])
 
