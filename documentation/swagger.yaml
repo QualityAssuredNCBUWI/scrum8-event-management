@@ -456,7 +456,7 @@ definitions:
         format: "int64"
         description: "user id of user who created the event"
     xml:
-      name: "Order"
+      name: "Event"
   Users:
     type: "object"
     properties:
@@ -531,6 +531,9 @@ definitions:
       groupId: 
         type: "integer"
         format: "integer"
+    xml:
+          name: "Affiliation"  
+
   Groups:
     type: "object"
     properties:
@@ -543,6 +546,8 @@ definitions:
       admin: 
         type: "integer"
         format: "integer"
+     xml:
+      name: "Groups"
 
   UserRegistration:
     type: "object"
