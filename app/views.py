@@ -29,28 +29,28 @@ from app.forms import *
 def home():
     return render_template('pages/home.html')
 
-@app.route('/api/register')
+@app.route('/register')
 def register_page():
     form=SignUpForm()
     return render_template('pages/register.html', form=form)
 
 
-@app.route('/api/auth/login')
-def login():
+@app.route('/login')
+def login_page():
     form= LoginForm()
     return render_template('pages/login_form.html', form=form)
 
 
-@app.route('/api/events')
-def createEvents():
+@app.route('/createEvents')
+def createEvents_page():
     form= CreateEvent()
-    return render_template('pages/createEvent.html', form=form)
+    return render_template('pages/events_form.html', form=form)
 
 
-@app.route('/api/groups')
-def createGroups():
+@app.route('/createGroups')
+def createGroups_page():
     form= CreateGroup()
-    return render_template('pages/createGroup.html', form=form)
+    return render_template('pages/group_form.html', form=form)
       
 
 # FOR ADD EVENT

@@ -8,6 +8,7 @@
           Register New User
         </h3>
         <form action="/api/register" method="POST" enctype="multipart/form-data">
+            {{ form.csrf_token }}
             <div class="form-row">
                 <div class="col w-25">
                     {{ form.first_name.label}}
@@ -34,6 +35,7 @@
             </div>
             <div class="form-row">
                 <div class="col w-50">
+                    <input type="file" name="profile_photo" >
                     {{ form.profile_photo.label}}
                     {{ form.profile_photo }}
                 </div>
