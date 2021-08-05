@@ -6,6 +6,8 @@ This file creates your application.
 """
 from operator import sub
 import os
+
+from flask.wrappers import Request
 from app import app, db, login_manager
 from flask import render_template, request, redirect, url_for, flash, send_from_directory, abort, jsonify, g, make_response
 from flask_login import login_user, logout_user, current_user, login_required
@@ -318,6 +320,25 @@ def getevent(id):
         return jsonify({"result": event}), 404
     # else:
     #     return jsonify({'result': "Access token is missing or invalid"}), 401
+
+
+@app.route('/api/events/<event_id>', methods = ['PUT'])
+@requires_auth
+def updateEvent(eventid):
+    data= request.form
+    
+    event= Event.query.filter_by(id=eventid).first()
+    schedule = Schedule.filter_by(eventId=eventid).first()
+    groupid=schedule.groupId
+    group = Group.query.filter_by(id=groupid)
+    if sub == group.admin:
+        event.status = 'Published'
+        return jsonify({'id': event.id, 'status': event.status})
+    else:
+        return jsonify({'result': 'Not allowed'}), 400
+
+
+
         
 
 """              API: Group              """
