@@ -18,7 +18,7 @@ from app.models import *
 # from app.forms import *
 from app.jwt import *
 from app.api_endpoints import *
-from forms import *
+from app.forms import *
 
 
 
@@ -29,28 +29,28 @@ from forms import *
 def home():
     return render_template('pages/home.html')
 
-@app.route('/register')
+@app.route('/api/register')
 def register_page():
     form=SignUpForm()
-    return render_template('pages/register.html')
+    return render_template('pages/register.html', form=form)
 
 
-@app.route('/login')
-def home():
+@app.route('/api/auth/login')
+def login():
     form= LoginForm()
-    return render_template('pages/login_form.html')
+    return render_template('pages/login_form.html', form=form)
 
 
 @app.route('/api/events')
-def home():
+def createEvents():
     form= CreateEvent()
-    return render_template('pages/createEvent.html')
+    return render_template('pages/createEvent.html', form=form)
 
 
 @app.route('/api/groups')
-def home():
+def createGroups():
     form= CreateGroup()
-    return render_template('pages/createGroup.html')
+    return render_template('pages/createGroup.html', form=form)
       
 
 # FOR ADD EVENT

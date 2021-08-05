@@ -1,17 +1,17 @@
 from flask_wtf import FlaskForm
 from wtforms import SelectField, PasswordField, StringField, DateTimeField, TextAreaField
-from wtforms.validators import InputRequired, Email, Optional,EqualTo
+from wtforms.validators import InputRequired, Email, Optional, EqualTo
 
 
 class LoginForm(FlaskForm):
-    email = StringField('Email' , validators=[Email()])
+    email = StringField('Email' , validators=[InputRequired()])
     password = PasswordField('Password')
 
 class SignUpForm(FlaskForm):
     first_name = StringField('First Name', validators=[InputRequired()])
-    last_name = StringField('Last Name', validators=[InputRequired])
-    email = StringField('Email', validators=[Email(),InputRequired()])
-    password = PasswordField('password', validators=[InputRequired, EqualTo('confirm',message='Must be the same as previous')])
+    last_name = StringField('Last Name', validators=[InputRequired()])
+    email = StringField('Email', validators=[InputRequired()])
+    password = PasswordField('password', validators=[InputRequired(), EqualTo('confirm',message='Must be the same as previous')])
     confirm = PasswordField('Repeat Password')
 
 class CreateEvent(FlaskForm):
