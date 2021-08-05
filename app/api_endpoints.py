@@ -4,7 +4,7 @@ from flask import render_template, request, redirect, url_for, flash, send_from_
 # from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from app.models import *
 # from app.forms import *
 from app.jwt import *
@@ -77,8 +77,8 @@ def login():
             payload = {
                 'sub': user.id, #technical identifier of the user
                 'email': user.email,
-                'iat': datetime.datetime.now(datetime.timezone.utc), #current time -- generate timestamp
-                'exp': datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(minutes=60) #token expires in 10 mins -- generate timestamp
+                'iat': datetime.now(timezone.utc), #current time -- generate timestamp
+                'exp': datetime.now(timezone.utc) + timedelta(minutes=60) #token expires in 10 mins -- generate timestamp
             }
             token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
 
