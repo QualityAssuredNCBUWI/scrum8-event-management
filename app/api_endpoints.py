@@ -683,7 +683,7 @@ def addMember():
                 db.session.commit()
 
                 # get the new member just added
-                newMember = Affiliate.query.filter_by(userId=member.id).first()
+                newMember = Affiliate.query.filter_by(userId=member.id, groupId=group.id).first()
 
                 # build jsonify response
                 return jsonify({'userId': newMember.userId, 'groupId': newMember.groupId}), 201

@@ -147,12 +147,11 @@ paths:
       - application/xml
       - application/json
       parameters:
-      - in: body
-        name: body
-        description: Created group object
+      - name: name
+        in: formData
+        description: Name of the group
         required: true
-        schema:
-          $ref: '#/definitions/Groups'
+        type: string
       responses:
         "201":
           description: Group Successfully created
