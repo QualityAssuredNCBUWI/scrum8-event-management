@@ -59,6 +59,10 @@ def createGroups_page():
 def viewAllEvents():
     return render_template('pages/view_events.html')
 
+@app.route('/events/pending')
+def viewPendingEvents():
+    return render_template('pages/view_pending_events.html')
+
 @app.route('/addMember')
 def addNewMember():
     form= AddMember()

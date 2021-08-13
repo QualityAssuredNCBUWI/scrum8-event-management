@@ -43,4 +43,46 @@
         </form>
     </section>
 </div>
+
+<!-- Jquery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script>
+    $( window ).ready(function() {
+        $("#register-form").submit(function(event){
+            event.preventDefault();  //prevent form from submitting
+            let data = $("#register-form :input").serializeArray();
+
+            console.log(data);
+
+            let prof_photo =  document.getElementById('profile_photo');
+
+            prof_photo = prof_photo.files;
+
+            var formData = new FormData();
+            formData.append('first_name', data[1].value);
+            formData.append('last_name', data[2].value);
+            formData.append('email', data[5].value);
+            formData.append('password', data[3].value);
+            formData.append('profile_photo', prof_photo[0], prof_photo[0].name);
+            
+
+            $.ajax({
+                url: 'http://127.0.0.1:8079/api/register',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                async: false,
+                success: function(result) {
+                    console.log(result)
+                    alert("Register Succesful")
+
+                }
+            });
+
+
+        });
+
+    });
+</script>
 {% endblock %}

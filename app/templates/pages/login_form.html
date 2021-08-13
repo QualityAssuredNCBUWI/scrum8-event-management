@@ -18,7 +18,7 @@
                     {{ form.password(class='form-control') }}
                 </div> 
             </div>
-            <button type="submit" class="btn btn-success mb-2">Register</button>
+            <button type="submit" class="btn btn-success mb-2">Login</button>
         </form>
     </section>
 </div>
@@ -43,6 +43,7 @@
                 success: function(result) {
                     document.cookie = "token="+JSON.stringify(result.token);
                     alert("Login Succesful")
+                    window.location.replace('http://127.0.0.1:8079/')
 
                 }
             });
