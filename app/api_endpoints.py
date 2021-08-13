@@ -18,7 +18,7 @@ r = re.compile('(0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[- /.](19|20)\d\d')
 
 # This route doesn't require a JWT
 @app.route('/api/register', methods=['POST'])
-def register(): 
+def register():
     if request.form : #TBD:update to check for essentials
         # get photo filename
         rawPhoto = request.files['profile_photo']
@@ -48,7 +48,7 @@ def register():
             #build api response with user data
             userResult = {
                 'message':"User created successfully",
-                'id': user.id, 
+                'id': user.id,
                 'firstname': user.first_name,
                 'lastname': user.last_name,
                 'email': user.email,
@@ -61,9 +61,9 @@ def register():
         return jsonify({'user': []}), 400
 
 @app.route('/api/auth/login', methods=['POST'])
-def login(): 
+def login():
     if not request.json or not 'email' in request.json or not 'password' in request.json:
-       abort(400) #bad request http code
+        abort(400) #bad request http code
     else:
         email = request.json['email']
         password = request.json['password']
@@ -173,7 +173,7 @@ def getCurrentUser():
 @requires_auth
 def updateCurrentUser():
     try:
-        if request.form:
+        if request.form or request.files:
             error_found = False
             errors = []
 
@@ -182,7 +182,7 @@ def updateCurrentUser():
                 return jsonify({"message":"Invalid user ID"}),406
 
             user = User.query.get(user_id)
-            if(user is None): 
+            if(user is None):
                 return jsonify({"message":"user is unavailable"}),404
             
             # update each user field if its available
@@ -297,16 +297,20 @@ def updateUser(user_id):
                     errors.append("The ( confirm_email ) field is required")
             
             # update password
-            if('password' in request.form):
-                if('confirm_password' in request.form):
-                    if(request.form['password'] == request.form['confirm_password']):
-                        user.password = generate_password_hash(request.form['password'], method='pbkdf2:sha256') 
+            if 'password' in request.form and 'old_password' in request.form:
+                if check_password_hash(user.password, request.form['old_password']):
+                    if 'confirm_password' in request.form:
+                        if(request.form['password'] == request.form['confirm_password']):
+                            user.password = generate_password_hash(request.form['password'], method='pbkdf2:sha256') 
+                        else:
+                            error_found = True
+                            errors.append("The passwords are different")
                     else:
                         error_found = True
-                        errors.append("The passwords are different")
+                        errors.append("The ( confirm_password ) field is required")
                 else:
                     error_found = True
-                    errors.append("The ( confirm_password ) field is required")
+                    errors.append("Incorrect old password")
             
             if(error_found):
                 return jsonify({
