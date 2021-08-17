@@ -412,6 +412,84 @@ def get_all_events():
             return jsonify({'result': result}), 200
         return jsonify({"message": "No events found."}), 404
 
+@app.route('/api/events/user', methods = ['GET'])
+@requires_auth
+def get_user_events():
+    if request.method == 'GET':
+
+        user_id = g.current_user['sub']
+
+        submitted_events = Submit.query.filter_by(userId=user_id)
+        
+        user_events = []
+
+        for submit in submitted_events:
+            user_events.append(submit.eventId)
+
+        start = request.args.get('start_date')
+        if start is None:
+            start = ''
+        end = request.args.get('end_date')
+        if end is None:
+            end = ''
+        title = request.args.get('title')
+        if start == '' and end == '' and title is None:
+            events = Event.query.filter(Event.id.in_(user_events)).all()
+            print(1)
+        elif r.match(start) is not None and r.match(end) is not None and title is not None:
+            start = datetime.strptime(start, '%Y-%m-%d')
+            end = datetime.strptime(end, '%Y-%m-%d')
+            events = Event.query.filter(Event.id.in_(user_events)).filter(Event.title.contains(title)).filter(Event.end_date>=end).filter(Event.start_date>=start).all()
+            print(2)
+        elif r.match(start) is not None and r.match(end) is not None and title is None:
+            start = datetime.strptime(start, '%Y-%m-%d')
+            end = datetime.strptime(end, '%Y-%m-%d')
+            events = Event.query.filter(Event.id.in_(user_events)).filter(Event.end_date <= end).filter(Event.start_date >= start).all()
+            print(3)
+        elif r.match(start) is not None and r.match(end) is None and title is None:
+            start = datetime.strptime(start, '%Y-%m-%d')
+            events = Event.query.filter(Event.id.in_(user_events)).filter(Event.start_date >= start).all()
+            print(4)
+        elif r.match(start) is None and r.match(end) is not None and title is None:
+            end = datetime.strptime(end, '%Y-%m-%d')
+            events = Event.query.filter(Event.id.in_(user_events)).filter(Event.end_date <= end).all()
+            print(5)
+        elif r.match(start) is None and r.match(end) is None and title is not None:
+            events = Event.query.filter(Event.id.in_(user_events)).filter(Event.title.contains(title)).all()
+            print(6)
+        elif r.match(start) is None and r.match(end) is None and title is None:
+            return jsonify({"message": "Invalid query parameters, Dates should be formatted as yyyy-mm-dd"}), 400
+        else:
+            return jsonify({"message": "Invalid query parameters, Dates should be formatted as yyyy-mm-dd"}), 400
+        result = []
+        if len(events) != 0:
+            for event in events:
+                if(event.status == "published"):
+                    eid = event.id
+                    title = event.title
+                    description = event.description
+                    start_date = event.start_date
+                    end_date = event.end_date
+                    venue = event.venue
+                    website_url = event.website_url
+                    status = event.status
+                    image = event.image
+                    uid = event.uid
+                    event = {
+                        'id': eid, 
+                        "description": description, 
+                        "title": title, 
+                        "start_date": start_date, 
+                        "end_date": end_date, 
+                        "venue": venue, 
+                        "website_url": website_url, 
+                        "status": status, 
+                        "image": image, 
+                        "uid": uid}
+                    result.append(event)
+            return jsonify({'result': result}), 200
+        return jsonify({"message": "No events found."}), 404
+
 @app.route('/api/events', methods = ['POST'])
 @requires_auth
 def addEvents():
