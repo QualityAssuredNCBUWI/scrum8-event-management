@@ -831,7 +831,6 @@ def getUserGroups():
         return jsonify({"message":"No event found"}), 404
     return jsonify({"message":"An error occured"}),400
 
-
 @app.route('/api/group/<group_id>', methods = ['DELETE'])
 @requires_auth
 def deleteGroup(group_id):
