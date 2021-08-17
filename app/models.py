@@ -2,7 +2,8 @@
     Models for DuRoad API
 """
 from werkzeug.security import generate_password_hash
-from . import db
+from app import db
+
 
 class User(db.Model):
     """
@@ -81,7 +82,6 @@ class Event(db.Model):
     def __repr__(self):
         return '<Event %r>' % (self.id)
 
-
 class Group(db.Model):
     __tablename__ = 'Group'
 
@@ -98,7 +98,6 @@ class Group(db.Model):
 
     def __repr__(self):
         return '<Group %r>' % (self.id)
-
 
 class Affiliate(db.Model):
     __tablename__ = 'Affiliate'
@@ -118,7 +117,6 @@ class Affiliate(db.Model):
     def __repr__(self):
         return '<Affiliate %r,%r>' % (self.userId, self.groupId)
 
-
 class Schedule(db.Model):
     __tablename__ = 'Schedule'
 
@@ -134,7 +132,6 @@ class Schedule(db.Model):
 
     def __repr__(self):
         return '<Schedule %r,%r>' % (self.eventId, self.groupId)
-
 
 class Submit(db.Model):
     __tablename__ = 'Submit'

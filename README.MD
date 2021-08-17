@@ -10,7 +10,7 @@ venv\Scripts\activate (windows)
 ```
 ## Install requirements
 ```
-pip install --upgrade pip
+pip install --upgrade pip (can be skipped)
 pip install -r requirements.txt
 ```
 

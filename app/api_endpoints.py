@@ -384,18 +384,29 @@ def get_all_events():
         result = []
         if len(events) != 0:
             for event in events:
-                eid = event.id
-                title = event.title
-                description = event.description
-                start_date = event.start_date
-                end_date = event.end_date
-                venue = event.venue
-                website_url = event.website_url
-                status = event.status
-                image = event.image
-                uid = event.uid
-                event = {'id': eid, "description": description, "title": title, "start_date": start_date, "end_date": end_date, "venue": venue, "website_url": website_url, "status": status, "image": image, "uid": uid}
-                result.append(event)
+                if(event.status == "published"):
+                    eid = event.id
+                    title = event.title
+                    description = event.description
+                    start_date = event.start_date
+                    end_date = event.end_date
+                    venue = event.venue
+                    website_url = event.website_url
+                    status = event.status
+                    image = event.image
+                    uid = event.uid
+                    event = {
+                        'id': eid, 
+                        "description": description, 
+                        "title": title, 
+                        "start_date": start_date, 
+                        "end_date": end_date, 
+                        "venue": venue, 
+                        "website_url": website_url, 
+                        "status": status, 
+                        "image": image, 
+                        "uid": uid}
+                    result.append(event)
             return jsonify({'result': result}), 200
         return jsonify({"message": "No events found."}), 404
 
@@ -412,7 +423,7 @@ def addEvents():
             return jsonify({"message": "User is not in group"}), 403 
         
         # get photo filename
-        rawEventPhoto = request.files['images']
+        rawEventPhoto = request.files['image']
         eventFilename = secure_filename(rawEventPhoto.filename)
         rawEventPhoto.save(os.path.join(
             app.config['EVENT_UPLOAD_FOLDER'], eventFilename
@@ -472,12 +483,10 @@ def addEvents():
             #send api response
             # return jsonify({'event': eventResult}), 201
             return jsonify({
-                "message":"event added",
                 "group_id": request.form["group_id"],
                 "event": event_response
                 }), 201
     return jsonify({"message":"An error occured", 'event': []}), 400
-
 
 @app.route('/api/events/<event_id>', methods = ['GET'])
 @requires_auth
@@ -497,10 +506,19 @@ def getevent(event_id):
         image = event.image
         uid = event.uid
 
-        return jsonify({'id': eid, "description": description, "start_date": start_date, "end_date": end_date, "title": title, "venue": venue, "website_url": website_url, "status": status, "image": image, "uid": uid}), 200
+        return jsonify({
+            'id': eid, 
+            "description": description, 
+            "start_date": start_date, 
+            "end_date": end_date, 
+            "title": title, 
+            "venue": venue, 
+            "website_url": website_url, 
+            "status": status, 
+            "image": image, 
+            "uid": uid}), 200
     elif event is None:
         return jsonify({"message": "No event found."}), 404  
-
 
 @app.route('/api/events/<event_id>', methods = ['PUT']) #update user endpoint
 @requires_auth #ensure the user is logged in
@@ -556,7 +574,20 @@ def removeEvent(event_id):
                 if( Event.query.filter_by(id=event_id).first() is not None or Schedule.query.filter_by(eventId=event_id).first() is not None or Submit.query.filter_by(eventId=event_id).first() is not None):
                     return ({'result': 'Unable to delete event'}), 400  
                 else:
-                    return jsonify({'message': 'Event deleted.', 'result':{'id': eid, "description": description, "start_date": start_date, "end_date": end_date, "title": title, "venue": venue, "website_url": website_url, "status": status, "image": image, "uid": uid}}), 200
+                    return jsonify({
+                        'message': 'Event deleted.', 
+                        'result':{
+                            'id': eid, 
+                            "description": description, 
+                            "start_date": start_date, 
+                            "end_date": end_date, 
+                            "title": title, 
+                            "venue": venue, 
+                            "website_url": website_url, 
+                            "status": status, 
+                            "image": image, 
+                            "uid": uid
+                        }}), 200
             else:
                 return jsonify({'result': 'You are not the admin for this group.'}), 401
             return jsonify({"message": 'Event not found'}), 404  
@@ -565,7 +596,7 @@ def removeEvent(event_id):
 
 @app.route('/api/events/groups/<group_id>/pending', methods = ['GET']) #update user endpoint
 @requires_auth #ensure the user is logged in
-def getPending(group_id):
+def getPendingGroupEvent(group_id):
     try:
         user_id = g.current_user['sub']
         if (not isinstance(user_id, int) and not user_id.isnumeric()): 
@@ -604,13 +635,12 @@ def getPending(group_id):
                     'created_date': event.created_at
                 })
 
-        return jsonify({"message": "events", "group": group_id, "events":events})
+        return jsonify({"group": group_id, "events":events})
     except:
         pass
 
     return jsonify({"message":"an error occured"})
             
-
 @app.route('/api/events/groups/<group_id>', methods= ['GET'])
 def getEventsInGroup(group_id): 
     try:
@@ -626,7 +656,7 @@ def getEventsInGroup(group_id):
 
         for schedule in schedules:
             event = Event.query.get(schedule.eventId)
-            if(event.status == "active"):
+            if(event.status == "published"):
                 events.append({
                     'id': event.id,
                     'title': event.title,
@@ -640,13 +670,13 @@ def getEventsInGroup(group_id):
                     'user_id': event.uid,
                     'created_date': event.created_at
                 })
-
-        return jsonify({"message": "events", "group": group_id, "events":events})
+        return jsonify({"group": group_id, "events":events})
     except:
         pass
 
     return jsonify({"message":"an error occured"})
-    
+
+
 
 """              API: Group              """
 @app.route('/api/groups/addMember', methods = ['POST'])
@@ -692,7 +722,6 @@ def addMember():
     else:
         return jsonify({'message': 'Must be logged into an active session and be admin of group'}), 400
 
-
 @app.route('/api/groups', methods = ['POST'])
 @requires_auth
 def createGroup():    
@@ -733,3 +762,106 @@ def createGroup():
 
     else:
             return jsonify({'Group': []}), 400
+
+@app.route('/api/groups', methods = ['GET'])
+def getAllGroups():
+    if request.method == 'GET':
+        groups = None
+        title = request.args.get('name')
+        if title is None:
+            groups = Group.query.all()
+        else:
+            groups = Group.query.filter(Group.name.contains(title)).all()
+        
+        if(len(groups) > 0):
+            result = []
+            for group in groups:
+                result.append({
+                    "id": group.id,
+                    "name": group.name,
+                    "admin": group.admin
+                })
+            return jsonify(result), 200
+        return jsonify({"message":"No event found"}), 404
+    return jsonify({"message":"An error occured"}),400
+
+@app.route('/api/group/<group_id>', methods = ['GET'])
+def getGroup(group_id):
+    if request.method == 'GET':
+        if (not isinstance(group_id, int) and not group_id.isnumeric()): 
+            return jsonify({"message":"Invalid group ID"}),406
+
+        group = Group.query.get(group_id)
+        if group is None : return jsonify({"message":"The group doesn't exisit"}),404
+
+        return jsonify({
+            "id": group.id,
+            "name": group.name,
+            "admin": group.admin
+        }),200
+
+    return jsonify({"message":"An error occured"}),400
+
+@app.route('/api/groups/user', methods = ['GET'])
+@requires_auth
+def getUserGroups():
+    if request.method == 'GET':
+        user_id = g.current_user['sub']
+        affiliates = Affiliate.query.filter_by(userId=user_id).all()
+
+        if affiliates is None: return jsonify({"message":"The user is not in any group"}),404
+
+        group_ids = []
+
+        for affil in affiliates:
+            group_ids.append(affil.groupId)
+        
+        groups = None
+        groups = Group.query.filter(Group.id.in_(group_ids)).all()
+
+        if(len(groups) > 0):
+            result = []
+            for group in groups:
+                result.append({
+                    "id": group.id,
+                    "name": group.name,
+                    "admin": group.admin
+                })
+            return jsonify(result), 200
+        return jsonify({"message":"No event found"}), 404
+    return jsonify({"message":"An error occured"}),400
+
+
+@app.route('/api/group/<group_id>', methods = ['DELETE'])
+@requires_auth
+def deleteGroup(group_id):
+    if request.method == 'DELETE':
+        if (not isinstance(group_id, int) and not group_id.isnumeric()): 
+            return jsonify({"message":"Invalid group ID"}),406
+
+        group = Group.query.get(group_id)
+        if group is None : return jsonify({"message":"The group doesn't exisit"}),404
+
+        user_id = g.current_user['sub']
+        if group.admin != user_id: return jsonify({"message":"The  user is not the group admin"}),403
+
+        affiliates = Affiliate.query.filter_by(groupId=group_id).all()
+        schedules = Schedule.query.filter_by(groupId=group_id).all()
+
+        for affil in affiliates:
+            db.session.delete(affil)
+        
+        for sched in schedules:
+            db.session.delete(sched)
+        
+        db.session.delete(group)
+        
+        db.session.commit()
+
+        return jsonify({
+            "id": group.id,
+            "name": group.name,
+            "admin": group.admin
+        }),200
+
+    return jsonify({"message":"An error occured"}),400
