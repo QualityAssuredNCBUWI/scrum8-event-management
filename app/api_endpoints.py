@@ -11,7 +11,9 @@ from app.jwt import *
 
 
 # Used to validate dates
-r = re.compile('(0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[- /.](19|20)\d\d')
+# r = re.compile('(0[1-9]|[12][0-9]|3[01])[-](0[1-9]|1[012])[- /.](19|20)\d\d')
+r = re.compile('([0-9]{4}[-/]?((0[13-9]|1[012])[-/]?(0[1-9]|[12][0-9]|30)|(0[13578]|1[02])[-/]?31|02[-/]?(0[1-9]|1[0-9]|2[0-8]))|([0-9]{2}(([2468][048]|[02468][48])|[13579][26])|([13579][26]|[02468][048]|0[0-9]|1[0-6])00)[-/]?02[-/]?29)')
+
 
 
 """              API: AUTHENTICATION & SEARCH              """
@@ -357,30 +359,30 @@ def get_all_events():
             events = db.session.query(Event).all()
             print(1)
         elif r.match(start) is not None and r.match(end) is not None and title is not None:
-            start = datetime.strptime(start, '%d-%m-%Y')
-            end = datetime.strptime(end, '%d-%m-%Y')
+            start = datetime.strptime(start, '%Y-%m-%d')
+            end = datetime.strptime(end, '%Y-%m-%d')
             events = Event.query.filter(Event.end_date>=end).filter(Event.start_date>=start).filter_by(title=title).all()
             print(2)
         elif r.match(start) is not None and r.match(end) is not None and title is None:
-            start = datetime.strptime(start, '%d-%m-%Y')
-            end = datetime.strptime(end, '%d-%m-%Y')
+            start = datetime.strptime(start, '%Y-%m-%d')
+            end = datetime.strptime(end, '%Y-%m-%d')
             events = Event.query.filter(Event.end_date <= end).filter(Event.start_date >= start).all()
             print(3)
         elif r.match(start) is not None and r.match(end) is None and title is None:
-            start = datetime.strptime(start, '%d-%m-%Y')
+            start = datetime.strptime(start, '%Y-%m-%d')
             events = Event.query.filter(Event.start_date >= start).all()
             print(4)
         elif r.match(start) is None and r.match(end) is not None and title is None:
-            end = datetime.strptime(end, '%d-%m-%Y')
+            end = datetime.strptime(end, '%Y-%m-%d')
             events = Event.query.filter(Event.end_date <= end).all()
             print(5)
         elif r.match(start) is None and r.match(end) is None and title is not None:
             events = Event.query.filter_by(title=title).all()
             print(6)
         elif r.match(start) is None and r.match(end) is None and title is None:
-            return jsonify({"message": "Invalid query parameters, Dates should be formatted as dd-mm-yyyy"}), 400
+            return jsonify({"message": "Invalid query parameters, Dates should be formatted as yyyy-mm-dd"}), 400
         else:
-            return jsonify({"message": "Invalid query parameters, Dates should be formatted as dd-mm-yyyy"}), 400
+            return jsonify({"message": "Invalid query parameters, Dates should be formatted as yyyy-mm-dd"}), 400
         result = []
         if len(events) != 0:
             for event in events:
