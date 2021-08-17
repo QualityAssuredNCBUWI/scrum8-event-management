@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: f4b89099f838
+Revision ID: c21f905ee538
 Revises: 
-Create Date: 2021-08-04 21:09:06.214218
+Create Date: 2021-08-15 20:26:10.558501
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'f4b89099f838'
+revision = 'c21f905ee538'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -53,28 +53,28 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('name', sa.String(length=1024), nullable=True),
     sa.Column('admin', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['admin'], ['User.id'], ),
+    sa.ForeignKeyConstraint(['admin'], ['User.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('Affiliate',
     sa.Column('userId', sa.Integer(), nullable=False),
     sa.Column('groupId', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['groupId'], ['Group.id'], ),
-    sa.ForeignKeyConstraint(['userId'], ['User.id'], ),
+    sa.ForeignKeyConstraint(['groupId'], ['Group.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['userId'], ['User.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('userId', 'groupId')
     )
     op.create_table('Schedule',
     sa.Column('eventId', sa.Integer(), nullable=False),
     sa.Column('groupId', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['eventId'], ['Event.id'], ),
-    sa.ForeignKeyConstraint(['groupId'], ['Group.id'], ),
+    sa.ForeignKeyConstraint(['eventId'], ['Event.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['groupId'], ['Group.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('eventId', 'groupId')
     )
     op.create_table('Submit',
     sa.Column('eventId', sa.Integer(), nullable=False),
     sa.Column('userId', sa.Integer(), nullable=False),
-    sa.ForeignKeyConstraint(['eventId'], ['Event.id'], ),
-    sa.ForeignKeyConstraint(['userId'], ['User.id'], ),
+    sa.ForeignKeyConstraint(['eventId'], ['Event.id'], ondelete='CASCADE'),
+    sa.ForeignKeyConstraint(['userId'], ['User.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('eventId', 'userId')
     )
     # ### end Alembic commands ###
