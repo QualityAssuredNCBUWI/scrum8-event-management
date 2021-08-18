@@ -20,7 +20,7 @@ app = Flask(__name__)
 
 db = SQLAlchemy(app) #db setup
 
-CORS(app, resources={r"/api/*": {"origins": "*"}})
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
 
 # csrf = CSRFProtect(app) #csrf token form page and from validation
