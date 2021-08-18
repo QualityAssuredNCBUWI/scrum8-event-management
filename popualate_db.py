@@ -60,7 +60,8 @@ addEvent(
     description="Sing praises onto god sing praises ",
     venue="Party Concert",
     uid=1,
-    group_id=1
+    group_id=1,
+    status="published"
 )
 
 addEvent(
@@ -68,7 +69,8 @@ addEvent(
     description="Eat until you drop",
     venue="Just food restaurant",
     uid=2,
-    group_id=2
+    group_id=2,
+    status="published"
 )
 
 addEvent(
