@@ -750,11 +750,11 @@ def getEventsInGroup(group_id):
                     'user_id': event.uid,
                     'created_date': event.created_at
                 })
-        return jsonify({"group": group_id, "events":events})
+        return jsonify({"group": group_id, "events":events}), 200
     except:
         pass
 
-    return jsonify({"message":"an error occured"})
+    return jsonify({"message":"an error occured"}), 400
 
 
 
@@ -915,6 +915,8 @@ def getUserGroups():
 @requires_auth
 def getGroupMembers(group_id):
     if request.method == 'GET':
+        if (not isinstance(group_id, int) and not group_id.isnumeric()): abort(400)
+
         group = db.session.query(Group).filter_by(id=group_id).first()
         admin = group.admin
         # admin = getUser(admin).result
