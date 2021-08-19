@@ -659,6 +659,32 @@ def getEventAttendee(event_id):
             return jsonify({"message": "No event found."}), 404
     return jsonify({"message":"An error occured"}),400
 
+@app.route('/api/events/<event_id>/attend', methods = ['GET'])
+@requires_auth
+def checkUserAttendance(event_id):
+    if request.method == 'GET':
+        if (not isinstance(event_id, int) and not event_id.isnumeric()): return jsonify({"message":"Invalid event ID"}),406
+        
+        user_id = g.current_user['sub']
+
+        event = Event.query.filter_by(id=event_id).first()
+        # .all() is used on the BaseQuery to return an array for the results,
+        # allowing us to evaluate if we got no reult
+        if event is not None:
+            # get the attendee info
+            attendee = Attendee.query.filter_by(eventId=event_id, userId= user_id).first()
+
+            if attendee is None: 
+                return jsonify({"message":"user is not attending the event"}), 409
+            else:
+                return jsonify({
+                    "event-id": attendee.eventId,
+                    "user-id": attendee.userId
+                }),200
+
+        return jsonify({"message": "No event found."}), 404
+    return jsonify({"message":"An error occured"}),400
+
 @app.route('/api/events/<event_id>/attend', methods = ['POST'])
 @requires_auth
 def attendEvent(event_id):
@@ -702,7 +728,7 @@ def leaveEvent(event_id):
         # allowing us to evaluate if we got no reult
         if event is not None:
 
-            # create a new attendee
+            # ge the attendee info
             attendee = Attendee.query.filter_by(eventId=event_id, userId= user_id).first()
 
             if attendee is None: return jsonify({"message":"user is not attending the event"}), 409
