@@ -949,8 +949,13 @@ def deleteGroup(group_id):
 @requires_auth
 def getGroupAdminName(groupid):
     if request.method == 'GET':
-        group = Group.query.filter_by(id=groupid).all()
-        admin = User.query.filter_by(id=group.admin).first()
+            
+        if (not isinstance(groupid, int) and not groupid.isnumeric()): 
+            return jsonify({"message":"Invalid group ID"}),406
+        
+        group = Group.query.get(groupid)
+        a= group.admin
+        admin = User.query.get(a)
         adminFN = admin.first_name
         adminLN = admin.last_name
         name = adminFN + " " + adminLN
