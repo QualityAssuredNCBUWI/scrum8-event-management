@@ -406,7 +406,7 @@ def get_all_events():
                         "venue": venue, 
                         "website_url": website_url, 
                         "status": status, 
-                        "image": image, 
+                        "image": url_for('static', filename='files/upload/event/'+image), 
                         "uid": uid}
                     result.append(event)
             return jsonify({'result': result}), 200
@@ -484,7 +484,7 @@ def get_user_events():
                         "venue": venue, 
                         "website_url": website_url, 
                         "status": status, 
-                        "image": image, 
+                        "image": url_for('static', filename='files/upload/event/'+image), 
                         "uid": uid}
                     result.append(event)
             return jsonify({'result': result}), 200
@@ -563,7 +563,7 @@ def addEvents():
                 'venue': event.venue,  
                 'website_url': event.website_url,
                 'status': event.status, 
-                'image': event.image,  
+                'image': url_for('static', filename='files/upload/event/'+event.image),  
                 'user_id': event.uid
             }
 
@@ -604,7 +604,7 @@ def getevent(event_id):
                 "venue": venue, 
                 "website_url": website_url, 
                 "status": status, 
-                "image": image, 
+                "image": url_for('static', filename='files/upload/event/'+image), 
                 "uid": uid}), 200
 
         elif event is None:
@@ -780,7 +780,7 @@ def getPendingGroupEvent(group_id):
                     'end_date': event.end_date,
                     'description': event.description,
                     'venue': event.venue,
-                    'image': event.image,
+                    'image': url_for('static', filename='files/upload/event/'+event.image),
                     'website_url': event.website_url,
                     'status': event.status,
                     'user_id': event.uid,
@@ -816,7 +816,7 @@ def getEventsInGroup(group_id):
                     'end_date': event.end_date,
                     'description': event.description,
                     'venue': event.venue,
-                    'image': event.image,
+                    'image': url_for('static', filename='files/upload/event/'+event.image),
                     'website_url': event.website_url,
                     'status': event.status,
                     'user_id': event.uid,
