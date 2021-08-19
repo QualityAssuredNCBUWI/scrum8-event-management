@@ -675,7 +675,7 @@ def checkUserAttendance(event_id):
             attendee = Attendee.query.filter_by(eventId=event_id, userId= user_id).first()
 
             if attendee is None: 
-                return jsonify({"message":"user is not attending the event"}), 409
+                return jsonify({"user-id": user_id,"message":"user is not attending the event"}), 409
             else:
                 return jsonify({
                     "event-id": attendee.eventId,
@@ -741,7 +741,6 @@ def leaveEvent(event_id):
         elif event is None:
             return jsonify({"message": "No event found."}), 404
     return jsonify({"message":"An error occured"}),400
-
 
 @app.route('/api/events/<event_id>', methods = ['PUT']) #update user endpoint
 @requires_auth #ensure the user is logged in
@@ -1075,7 +1074,6 @@ def getEventGroup(event_id):
         return jsonify({"message":"No group found"}), 404
     return jsonify({"message":"An error occured"}),400
 
-
 @app.route('/api/groups/<group_id>/users', methods = ['GET'], endpoint='getGroupMembers')
 @requires_auth
 def getGroupMembers(group_id):
@@ -1138,3 +1136,4 @@ def deleteGroup(group_id):
         }),200
 
     return jsonify({"message":"An error occured"}),400
+
