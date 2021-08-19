@@ -927,8 +927,8 @@ def getGroupMembers(group_id):
             temp = User.query.filter_by(id=user.userId).first()
             u = {
                 'id': temp.id,
-                'firstname': temp.first_name,
-                'lastname': temp.last_name,
+                'first_name': temp.first_name,
+                'last_name': temp.last_name,
                 'email': temp.email,
                 'created_at': temp.created_at
             }
