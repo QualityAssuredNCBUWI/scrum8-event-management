@@ -945,7 +945,7 @@ def deleteGroup(group_id):
 
     return jsonify({"message":"An error occured"}),400
 
-@app.route('/api/groups/<group_id>', methods = ['GET'])
+@app.route('/api/groups/<groupid>', methods = ['GET'])
 @requires_auth
 def getGroupAdminName(groupid):
     if request.method == 'GET':
