@@ -683,7 +683,7 @@ def attendEvent(event_id):
             )
             db.session.add(attendee)
             db.session.commit()
-            return jsonify({}),201
+            return jsonify({}),200
 
         elif event is None:
             return jsonify({"message": "No event found."}), 404
@@ -710,7 +710,7 @@ def leaveEvent(event_id):
             db.session.delete(attendee)
             db.session.commit()
 
-            return jsonify({}),201
+            return jsonify({}),200
 
         elif event is None:
             return jsonify({"message": "No event found."}), 404
