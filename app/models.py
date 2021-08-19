@@ -150,6 +150,23 @@ class Submit(db.Model):
     def __repr__(self):
         return '<Submit %r,%r>' % (self.eventId, self.userId)
 
+class Attendee(db.Model):
+    __tablename__ = 'Attendee'
+
+    eventId = db.Column(db.Integer, db.ForeignKey('Event.id', ondelete='CASCADE'),  nullable=False, primary_key=True)
+    userId = db.Column(db.Integer, db.ForeignKey('User.id', ondelete='CASCADE'),  nullable=False, primary_key=True)
+    user = db.relationship('User', backref=db.backref('attendant', passive_deletes=True))
+    event = db.relationship('Event', backref=db.backref('attended_event', passive_deletes=True))
+    
+
+    def __init__(self, eventId, userId):
+        self.eventId = eventId
+        self.userId = userId
+        
+
+    def __repr__(self):
+        return '<Attendee %r,%r>' % (self.eventId, self.userId)
+
 # JSON web tokens blacklisttable
 class JWTBlacklist(db.Model):
     __tablename__ = 'jwtspoils'

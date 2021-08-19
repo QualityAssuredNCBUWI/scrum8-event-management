@@ -18,6 +18,8 @@ from .config import Config #configurations
 
 app = Flask(__name__) 
 
+app.config.from_object(Config)
+
 db = SQLAlchemy(app) #db setup
 
 CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
@@ -33,6 +35,5 @@ CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 # api = restful.Api(app, decorators=[csrf.exempt])
 # app.config['JWT_COOKIE_CSRF_PROTECT'] = False
 
-app.config.from_object(Config)
 from app import views, models
 # from app.models import *

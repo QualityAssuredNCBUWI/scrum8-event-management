@@ -548,6 +548,13 @@ def addEvents():
             db.session.add(submit)
             db.session.commit()
 
+            attendee = Attendee(
+                eventId=event.id,
+                userId=g.current_user['sub']
+            )
+            db.session.add(attendee)
+            db.session.commit()
+
             event_response = {
                 'id': event.id, 
                 'description': event.description,  'start_date': event.start_date,   
@@ -569,36 +576,101 @@ def addEvents():
     return jsonify({"message":"An error occured", 'event': []}), 400
 
 @app.route('/api/events/<event_id>', methods = ['GET'])
-@requires_auth
 def getevent(event_id):
-    event = Event.query.filter_by(id=event_id).first()
-     # .all() is used on the BaseQuery to return an array for the results,
-     # allowing us to evaluate if we got no reult
-    if event is not None:
-        eid = event.id
-        description = event.description
-        start_date = event.start_date
-        end_date = event.end_date
-        title = event.title
-        venue = event.venue
-        website_url = event.website_url
-        status = event.status
-        image = event.image
-        uid = event.uid
+    if request.method == 'GET':
+        if (not isinstance(event_id, int) and not event_id.isnumeric()): return jsonify({"message":"Invalid event ID"}),406
 
-        return jsonify({
-            'id': eid, 
-            "description": description, 
-            "start_date": start_date, 
-            "end_date": end_date, 
-            "title": title, 
-            "venue": venue, 
-            "website_url": website_url, 
-            "status": status, 
-            "image": image, 
-            "uid": uid}), 200
-    elif event is None:
-        return jsonify({"message": "No event found."}), 404  
+        event = Event.query.filter_by(id=event_id).first()
+        # .all() is used on the BaseQuery to return an array for the results,
+        # allowing us to evaluate if we got no reult
+        if event is not None:
+            eid = event.id
+            description = event.description
+            start_date = event.start_date
+            end_date = event.end_date
+            title = event.title
+            venue = event.venue
+            website_url = event.website_url
+            status = event.status
+            image = event.image
+            uid = event.uid
+
+            return jsonify({
+                'id': eid, 
+                "description": description, 
+                "start_date": start_date, 
+                "end_date": end_date, 
+                "title": title, 
+                "venue": venue, 
+                "website_url": website_url, 
+                "status": status, 
+                "image": image, 
+                "uid": uid}), 200
+
+        elif event is None:
+            return jsonify({"message": "No event found."}), 404
+    return jsonify({"message":"An error occured"}),400  
+
+@app.route('/api/events/<event_id>/users', methods = ['GET'])
+def getEventAttendee(event_id):
+    if request.method == 'GET':
+        if (not isinstance(event_id, int) and not event_id.isnumeric()): return jsonify({"message":"Invalid event ID"}),406
+
+        event = Event.query.filter_by(id=event_id).first()
+        # .all() is used on the BaseQuery to return an array for the results,
+        # allowing us to evaluate if we got no reult
+        if event is not None:
+
+            # get all the attendees
+            attendees = Attendee.query.filter_by(eventId=event_id).all()
+            user_ids = []
+            for attendee in attendees:
+                user_ids.append(attendee.userId)
+            
+            if user_ids is not []:
+                users = User.query.filter(User.id.in_(user_ids)).all()
+
+                user_names = []
+                for user in users:
+                    user_names.append({
+                        "id":user.id, 
+                        "first_name": user.first_name,
+                        "last_name": user.last_name,  
+                    })
+                return jsonify(user_names),200
+            else:
+                return jsonify([]),200
+
+        elif event is None:
+            return jsonify({"message": "No event found."}), 404
+    return jsonify({"message":"An error occured"}),400
+
+@app.route('/api/events/<event_id>/user', methods = ['POST'])
+@requires_auth
+def attendEvent(event_id):
+    if request.method == 'POST':
+        if (not isinstance(event_id, int) and not event_id.isnumeric()): return jsonify({"message":"Invalid event ID"}),406
+
+        user_id = g.current_user['sub']
+
+        event = Event.query.filter_by(id=event_id).first()
+        # .all() is used on the BaseQuery to return an array for the results,
+        # allowing us to evaluate if we got no reult
+        if event is not None:
+
+            # create a new attendee
+            attendee = Attendee(
+                eventId=event_id,
+                userId=user_id
+            )
+            db.session.add(attendee)
+            db.session.commit()
+            return jsonify({}),201
+
+        elif event is None:
+            return jsonify({"message": "No event found."}), 404
+    return jsonify({"message":"An error occured"}),400
+
 
 @app.route('/api/events/<event_id>', methods = ['PUT']) #update user endpoint
 @requires_auth #ensure the user is logged in
@@ -755,7 +827,6 @@ def getEventsInGroup(group_id):
         pass
 
     return jsonify({"message":"an error occured"}), 400
-
 
 
 """              API: Group              """
@@ -939,7 +1010,6 @@ def getGroupMembers(group_id):
 
         return jsonify({'result': {'admin': admin, 'users': users}}), 200
     return jsonify({"message":"An error occured"}),400
-
 
 @app.route('/api/group/<group_id>', methods = ['DELETE'])
 @requires_auth
