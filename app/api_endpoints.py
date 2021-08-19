@@ -339,6 +339,20 @@ def updateUser(user_id):
         pass
     return jsonify({"message":"An error occured"}),400
 
+@app.route('/api/users', methods = ['GET'])
+@requires_auth
+def getUserEmails():
+    users = db.session.query(User.email).all()
+    if users is not None:
+        result = []
+        for user in users:
+            result.append({
+                'email': user.email
+            })
+        return jsonify({'result': result}), 200
+    return jsonify({'message': 'No users'}), 404
+            
+
 
 """              API: Events              """
 
@@ -645,7 +659,7 @@ def getEventAttendee(event_id):
             return jsonify({"message": "No event found."}), 404
     return jsonify({"message":"An error occured"}),400
 
-@app.route('/api/events/<event_id>/user', methods = ['POST'])
+@app.route('/api/events/<event_id>/attend', methods = ['POST'])
 @requires_auth
 def attendEvent(event_id):
     if request.method == 'POST':
@@ -659,12 +673,43 @@ def attendEvent(event_id):
         if event is not None:
 
             # create a new attendee
+            attendee = Attendee.query.filter_by(eventId=event_id, userId= user_id).first()
+
+            if( attendee is not None): return jsonify({"message":"The user is already attending the event"}), 409
+
             attendee = Attendee(
                 eventId=event_id,
                 userId=user_id
             )
             db.session.add(attendee)
             db.session.commit()
+            return jsonify({}),201
+
+        elif event is None:
+            return jsonify({"message": "No event found."}), 404
+    return jsonify({"message":"An error occured"}),400
+
+@app.route('/api/events/<event_id>/leave', methods = ['POST'])
+@requires_auth
+def leaveEvent(event_id):
+    if request.method == 'POST':
+        if (not isinstance(event_id, int) and not event_id.isnumeric()): return jsonify({"message":"Invalid event ID"}),406
+
+        user_id = g.current_user['sub']
+
+        event = Event.query.filter_by(id=event_id).first()
+        # .all() is used on the BaseQuery to return an array for the results,
+        # allowing us to evaluate if we got no reult
+        if event is not None:
+
+            # create a new attendee
+            attendee = Attendee.query.filter_by(eventId=event_id, userId= user_id).first()
+
+            if attendee is None: return jsonify({"message":"user is not attending the event"}), 409
+
+            db.session.delete(attendee)
+            db.session.commit()
+
             return jsonify({}),201
 
         elif event is None:
@@ -982,6 +1027,29 @@ def getUserGroups():
         return jsonify({"message":"No event found"}), 404
     return jsonify({"message":"An error occured"}),400
 
+@app.route('/api/events/<event_id>/group', methods = ['GET'])
+def getEventGroup(event_id):
+    if request.method == 'GET':
+        if (not isinstance(event_id, int) and not event_id.isnumeric()): return jsonify({"message":"Invalid event ID"}),406
+
+        schedule = Schedule.query.filter_by(eventId=event_id).first()
+
+        if (schedule is None) : return jsonify({"message":"There is no group found for this event or the event is invalid"})
+
+        group = Group.query.filter_by(id= schedule.groupId).first()
+
+        if(group is not None):
+            result = {
+                "id": group.id,
+                "name": group.name,
+                "admin": group.admin
+            }
+            return jsonify(result), 200            
+
+        return jsonify({"message":"No group found"}), 404
+    return jsonify({"message":"An error occured"}),400
+
+
 @app.route('/api/groups/<group_id>/users', methods = ['GET'], endpoint='getGroupMembers')
 @requires_auth
 def getGroupMembers(group_id):
@@ -1044,17 +1112,3 @@ def deleteGroup(group_id):
         }),200
 
     return jsonify({"message":"An error occured"}),400
-
-@app.route('/api/users', methods = ['GET'])
-@requires_auth
-def getUserEmails():
-    users = db.session.query(User.email).all()
-    if users is not None:
-        result = []
-        for user in users:
-            result.append({
-                'email': user.email
-            })
-        return jsonify({'result': result}), 200
-    return jsonify({'message': 'No users'}), 404
-            
