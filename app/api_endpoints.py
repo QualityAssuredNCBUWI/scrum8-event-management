@@ -80,7 +80,7 @@ def login():
                 'sub': user.id, #technical identifier of the user
                 'email': user.email,
                 'iat': datetime.now(timezone.utc), #current time -- generate timestamp
-                'exp': datetime.now(timezone.utc) + timedelta(minutes=60) #token expires in 10 mins -- generate timestamp
+                'exp': datetime.now(timezone.utc) + timedelta(minutes=1440) #token expires in 1 day -- generate timestamp
             }
             token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
 
