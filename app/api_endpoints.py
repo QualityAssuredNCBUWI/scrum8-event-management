@@ -954,6 +954,6 @@ def getGroupAdminName(groupid):
         adminFN = admin.first_name
         adminLN = admin.last_name
         name = adminFN + " " + adminLN
-        return jsonify(name), 200
+        return jsonify({"adminName": name}), 200
     else:
         return jsonify({"message":"An error occured"}),400
