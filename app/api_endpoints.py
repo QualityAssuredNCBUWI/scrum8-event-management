@@ -750,11 +750,11 @@ def getEventsInGroup(group_id):
                     'user_id': event.uid,
                     'created_date': event.created_at
                 })
-        return jsonify({"group": group_id, "events":events})
+        return jsonify({"group": group_id, "events":events}), 200
     except:
         pass
 
-    return jsonify({"message":"an error occured"})
+    return jsonify({"message":"an error occured"}), 400
 
 
 
@@ -911,6 +911,36 @@ def getUserGroups():
         return jsonify({"message":"No event found"}), 404
     return jsonify({"message":"An error occured"}),400
 
+@app.route('/api/groups/<group_id>/users', methods = ['GET'], endpoint='getGroupMembers')
+@requires_auth
+def getGroupMembers(group_id):
+    if request.method == 'GET':
+        if (not isinstance(group_id, int) and not group_id.isnumeric()): abort(400)
+
+        group = db.session.query(Group).filter_by(id=group_id).first()
+        admin = group.admin
+        # admin = getUser(admin).result
+        # user_id = g.current_user['sub']
+        affiliates = db.session.query(Affiliate).filter_by(groupId=group_id).all()
+        users = []
+        for user in affiliates:
+            temp = User.query.filter_by(id=user.userId).first()
+            u = {
+                'id': temp.id,
+                'first_name': temp.first_name,
+                'last_name': temp.last_name,
+                'email': temp.email,
+                'created_at': temp.created_at
+            }
+            users.append(u)
+
+        if affiliates is None: 
+            return jsonify({"message":"Error! This group has no members."}),404
+
+        return jsonify({'result': {'admin': admin, 'users': users}}), 200
+    return jsonify({"message":"An error occured"}),400
+
+
 @app.route('/api/group/<group_id>', methods = ['DELETE'])
 @requires_auth
 def deleteGroup(group_id):
@@ -944,3 +974,17 @@ def deleteGroup(group_id):
         }),200
 
     return jsonify({"message":"An error occured"}),400
+
+@app.route('/api/users', methods = ['GET'])
+@requires_auth
+def getUserEmails():
+    users = db.session.query(User.email).all()
+    if users is not None:
+        result = []
+        for user in users:
+            result.append({
+                'email': user.email
+            })
+        return jsonify({'result': result}), 200
+    return jsonify({'message': 'No users'}), 404
+            
